@@ -1,6 +1,7 @@
 #ifndef PGMAVERAGE_H_
 #define PGMAVERAGE_H_
 
+#include <iostream>
 #include "PGMImage.h"
 
 #define CUDA_CHECK_RETURN(value) {																						\
@@ -20,8 +21,8 @@
 #define R 10
 #define N (2 * R * (R  + 1) + 1)
 
-struct PGMAverageCUDA{
-	PGMAverageCUDA(PGMImage& input, PGMImage& output);
+struct PGMAverage{
+	PGMAverage(PGMImage& input, PGMImage& output);
 
 	void average();
 
@@ -36,9 +37,6 @@ private:
 	void* dData;
 
 	byte averagePixel(unsigned x, unsigned y);
-
-	__global__ void average(void *data);
-	__device__ byte invert(byte b);
 };
 
 #endif /* PGMAVERAGE_H_ */

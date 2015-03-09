@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	unsigned size = picInput.getSize();
 	PGMImage picOutput(argv[2], w, h, picInput.getPixelMax());
 
-	PGMAverageCUDA average(picInput, picOutput);
+	PGMAverage average(picInput, picOutput);
 	average.average();
 
 	return 0;
