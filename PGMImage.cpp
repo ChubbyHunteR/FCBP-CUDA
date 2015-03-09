@@ -44,7 +44,7 @@ PGMImage::PGMImage(const char* imgName)
 	imgFileM >> tmp;
 	string magicNum(tmp);
 	if (magicNum != "P5") {
-        std::cerr << "Wrong file format" << imgName << endl;
+        std::cerr << "Wrong file format " << imgName << endl;
 		exit(EXIT_FAILURE);
 	}
 
