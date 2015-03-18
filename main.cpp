@@ -5,8 +5,7 @@
 #include "PGMAverage.h"
 #include "PGMAverageCUDA.h"
 #include <ctime>
-
-#define LOOP 10
+#include "config.h"
 
 string usage = " inputImage.pgm outputImage.pgm";
 
@@ -29,13 +28,17 @@ int main(int argc, char* argv[]) {
 	PGMImage picOutput1((outName + "1").c_str(), w, h, picInput.getPixelMax());
 	PGMImage picOutput2((outName + "2").c_str(), w, h, picInput.getPixelMax());
 
+	cout<<"Radius: "<<R<<endl;
+	cout<<"Threads: "<<THREADS<<endl;
+	cout<<"Loops: "<<LOOP<<endl;
+
 	PGMAverage average1(picInput, picOutput1);
 	clock_t t1 = clock();
 	for(int i = 0; i < LOOP; ++i){
-		average1.average();
+//		average1.average();
 	}
 	t1 = clock() - t1;
-	cout<<"CPU: "<<(float) t1 / CLOCKS_PER_SEC * 1000<<" ms"<<endl;
+	cout<<"CPU Time: "<<(float) t1 / CLOCKS_PER_SEC<<" s"<<endl;
 
 	PGMAverageCUDA average2(picInput, picOutput2);
 	clock_t t2 = clock();
@@ -43,7 +46,7 @@ int main(int argc, char* argv[]) {
 		average2.average();
 	}
 	t2 = clock() - t2;
-	cout<<"GPU: "<<(float) t2 / CLOCKS_PER_SEC * 1000<<" ms"<<endl;
+	cout<<"GPU time: "<<(float) t2 / CLOCKS_PER_SEC<<" s"<<endl;
 
 	return 0;
 }

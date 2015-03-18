@@ -5,8 +5,9 @@
  * R defines the radius in number of pixels. Radius is number of pixels left, right and top from the "current" pixel taken into
  * account when calculating the average. All the taken pixels form an area of N pixels, equal to (R+1) times (2R+1) minus R.
  */
-#define R 20
+#define R 100
 #define N (2 * R * (R  + 1) + 1)
-#define THREADS 512
+#define THREADS 64
+#define LOOP 20
 
 #endif /* CONFIG_H_ */
