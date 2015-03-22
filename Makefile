@@ -7,6 +7,8 @@ HEADERS = config.h PGMImage.h PGMAverage.h PGMAverageCUDA.h
 SOURCES = PGMImage.cpp PGMAverage.cpp PGMAverageCUDA.cu main.cpp
 LIBRARIES =
 
+all: $(PROJECT)
+
 $(PROJECT): $(OBJECTS)
 	$(CC) -o $(PROJECT) $(CFLAGS) $(OBJECTS)
 
