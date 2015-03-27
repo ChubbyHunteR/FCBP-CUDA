@@ -7,7 +7,8 @@
  */
 #define R 100
 #define N (2 * R * (R  + 1) + 1)
-#define THREADS 64
+#define THREADS 512
 #define LOOP 20
+#define MAX_PREDICTORS 10
 
 #endif /* CONFIG_H_ */

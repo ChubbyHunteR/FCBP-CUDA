@@ -1,10 +1,12 @@
 #include <iostream>
+#include <vector>
 #include <cstdlib>
 #include <string>
+#include <ctime>
 #include "PGMImage.h"
 #include "PGMAverage.h"
-#include "PGMAverageCUDA.h"
-#include <ctime>
+#include "PGMCBPCCUDA.h"
+#include "predictors/Predictor.h"
 #include "config.h"
 
 string usage = " inputImage.pgm outputImage.pgm";
@@ -40,7 +42,7 @@ int main(int argc, char* argv[]) {
 	t1 = clock() - t1;
 	cout<<"CPU Time: "<<(float) t1 / CLOCKS_PER_SEC<<" s"<<endl;
 
-	PGMAverageCUDA average2(picInput, picOutput2);
+	PGMCBPCCUDA average2(picInput, picOutput2);
 	clock_t t2 = clock();
 	for(int i = 0; i < LOOP; ++i){
 		average2.average();

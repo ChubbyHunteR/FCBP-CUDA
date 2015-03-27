@@ -1,8 +1,10 @@
-#ifndef PGMAVERAGECUDA_H_
-#define PGMAVERAGECUDA_H_
+#ifndef PGMCBPCCUDA_H_
+#define PGMCBPCCUDA_H_
 
 #include <iostream>
+#include <vector>
 #include "PGMImage.h"
+#include "predictors/Predictor.h"
 #include "config.h"
 
 #define CUDA_CHECK_RETURN(value) {																						\
@@ -13,21 +15,24 @@
 	}																													\
 }
 
-struct PGMAverageCUDA{
-	PGMAverageCUDA(PGMImage& input, PGMImage& output);
-	~PGMAverageCUDA();
+struct PGMCBPCCUDA{
+	PGMCBPCCUDA(PGMImage& input, PGMImage& output);
+	~PGMCBPCCUDA();
 
+	void init();
 	void average();
 
 private:
 	PGMImage& input;
 	PGMImage& output;
-	unsigned w, h, size;
+	Predictor* predictor[MAX_PREDICTORS];
+	unsigned w, h, size, numOfPredictors;
 	unsigned lookupOffsetx[N];
 	unsigned lookupOffsety[N];
 	byte* iData;
 	byte* oData;
 
+	void* dPredicted[MAX_PREDICTORS];
 	void* doData;
 	void* diData;
 	void* dLookupOffsetx;
@@ -36,4 +41,4 @@ private:
 	byte averagePixel(unsigned x, unsigned y);
 };
 
-#endif /* PGMAVERAGECUDA_H_ */
+#endif /* PGMCBPCCUDA_H_ */
