@@ -84,6 +84,28 @@ void PGMCBPCCUDA::init(){
 	}
 }
 
+void PGMCBPCCUDA::getStaticPrediction(unsigned i){
+	if(i >= numOfPredictors){
+		return;
+	}
+
+	CUDA_CHECK_RETURN(cudaMemcpy(oData, dPredicted[i], sizeof(byte) * size, cudaMemcpyDeviceToHost));
+
+	for(unsigned j = 0; j < h; ++j){
+		for(unsigned i = 0; i < w; ++i){
+			output.writePixel(i, j, oData[i + j*w]);
+		}
+	}
+}
+
+void PGMCBPCCUDA::addPredictor(Predictor* predictor){
+	if(numOfPredictors + 1 >= MAX_PREDICTORS){
+		return;
+	}
+
+	this->predictor[numOfPredictors++] = predictor;
+}
+
 byte PGMCBPCCUDA::averagePixel(unsigned anchorx, unsigned anchory){
 	unsigned sum = 0;
 	unsigned x, y;

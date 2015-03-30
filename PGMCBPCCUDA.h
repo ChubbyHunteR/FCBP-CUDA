@@ -20,6 +20,10 @@ struct PGMCBPCCUDA{
 	~PGMCBPCCUDA();
 
 	void init();
+	void getStaticPrediction(unsigned i);
+
+	void addPredictor(Predictor* predictor);
+
 	void average();
 
 private:

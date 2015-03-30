@@ -4,7 +4,7 @@ CFLAGS = -O3 -std=c++11
 PROJECT = cbpc
 OBJECTS = PGMImage.o PGMAverage.o PGMCBPCCUDA.o Predictor.o main.o
 HEADERS = config.h PGMImage.h PGMAverage.h PGMCBPCCUDA.h Predictor.h
-SOURCES = PGMImage.cpp PGMAverage.cpp PGMCBPCCUDA.cu Predictor.cpp main.cpp
+SOURCES = PGMImage.cpp PGMAverage.cpp PGMCBPCCUDA.cu Predictor.cu main.cpp
 LIBRARIES =
 
 all: $(PROJECT)
@@ -15,8 +15,8 @@ $(PROJECT): $(OBJECTS)
 PGMCBPCCUDA.o: PGMCBPCCUDA.cu PGMCBPCCUDA.h config.h
 	$(CC) -c -o PGMCBPCCUDA.o $(CFLAGS) -c PGMCBPCCUDA.cu
 
-Predictor.o: predictors/Predictor.cpp predictors/Predictor.h
-	$(CC) -c -o Predictor.o $(CFLAGS) -c predictors/Predictor.cpp
+Predictor.o: predictors/Predictor.cu predictors/Predictor.h
+	$(CC) -c -o Predictor.o $(CFLAGS) -c predictors/Predictor.cu
 
 PGMAverage.o: PGMAverage.cpp PGMAverage.h config.h
 	$(CC) -c -o PGMAverage.o $(CFLAGS) PGMAverage.cpp
