@@ -80,7 +80,7 @@ void PGMCBPCCUDA::init(){
 		CUDA_CHECK_RETURN(cudaMalloc(&dPredicted[i], sizeof(short) * size));
 	}
 	for(int i = 0; i < numOfPredictors; ++i){
-		predictor[i]->predict(diData, dPredicted[i], dLookupOffsetx, dLookupOffsety, w, h);
+		predictor[i]->predict(diData, dPredicted[i], w, h);
 	}
 }
 
