@@ -20,29 +20,30 @@ struct PGMCBPCCUDA{
 	~PGMCBPCCUDA();
 
 	void init();
-	void getStaticPrediction(unsigned i);
-
 	void addPredictor(Predictor* predictor);
+	void predict();
 
-	void average();
+	void getStaticPrediction(unsigned i);
 
 private:
 	PGMImage& input;
 	PGMImage& output;
 	Predictor* predictor[MAX_PREDICTORS];
 	unsigned w, h, size, numOfPredictors;
-	unsigned lookupOffsetx[N];
-	unsigned lookupOffsety[N];
+	unsigned radiusOffsetx[R_A];
+	unsigned radiusOffsety[R_A];
+	unsigned vectorOffsetx[D];
+	unsigned vectorOffsety[D];
 	byte* iData;
 	byte* oData;
 
 	void* dPredicted[MAX_PREDICTORS];
+	void* dRadiusOffsetx;
+	void* dRadiusOffsety;
+	void* dVectorOffsetx;
+	void* dVectorOffsety;
 	void* doData;
 	void* diData;
-	void* dLookupOffsetx;
-	void* dLookupOffsety;
-
-	byte averagePixel(unsigned x, unsigned y);
 };
 
 #endif /* PGMCBPCCUDA_H_ */

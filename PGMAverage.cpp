@@ -1,7 +1,7 @@
 #include "PGMAverage.h"
 
 PGMAverage::PGMAverage(PGMImage& input, PGMImage& output):input(input), output(output), w(input.getWidth()), h(input.getHeight()), size(input.getSize()){
-	for(int i = 0; i < N; ++i){
+	for(int i = 0; i < R_A; ++i){
 		lookupOffsetx[i] = -R + i % (2*R + 1);
 		lookupOffsety[i] = -R + i / (2*R + 1);
 	}
@@ -20,7 +20,7 @@ byte PGMAverage::averagePixel(unsigned anchorx, unsigned anchory){
 	unsigned x, y;
 	unsigned pixelHit = 0;
 
-	for(unsigned i = 0; i < N; ++i){
+	for(unsigned i = 0; i < R_A; ++i){
 		x = anchorx + lookupOffsetx[i];
 		y = anchory + lookupOffsety[i];
 		if(x < w && y < h){

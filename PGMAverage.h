@@ -14,8 +14,8 @@ private:
 	PGMImage& input;
 	PGMImage& output;
 	unsigned w, h, size;
-	unsigned lookupOffsetx[N];
-	unsigned lookupOffsety[N];
+	unsigned lookupOffsetx[R_A];
+	unsigned lookupOffsety[R_A];
 
 	byte averagePixel(unsigned x, unsigned y);
 };
