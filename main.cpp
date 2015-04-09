@@ -15,7 +15,7 @@
 #include "predictors/PredictorPL.h"
 #include "config.h"
 
-string usage = " inputImage.pgm outputImage.pgm";
+string usage = " inputImage.pgm outputImage.pgm outputErrorImage.pgm";
 
 void fail(string msg){
 	cerr<<msg<<endl;
@@ -23,7 +23,7 @@ void fail(string msg){
 }
 
 int main(int argc, char* argv[]) {
-	if(argc != 3){
+	if(argc != 4){
 		usage = string("Usage:\n") + argv[0] + usage;
 		fail(usage);
 	}
@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
 	unsigned h = picInput.getHeight();
 	unsigned size = picInput.getSize();
 	PGMImage picOutput(argv[2], w, h, picInput.getPixelMax());
+	PGMImage picError(argv[3], w, h, picInput.getPixelMax());
 
 	PredictorN predictorN;
 	PredictorNW predictorNW;
@@ -42,14 +43,16 @@ int main(int argc, char* argv[]) {
 	PredictorGN predictorGN;
 	PredictorPL predictorPL;
 
-	PGMCBPCCUDA cbpc(picInput, picOutput);
+	PGMCBPCCUDA cbpc(picInput, picOutput, picError);
 	cbpc.addPredictor(&predictorN);
 	cbpc.addPredictor(&predictorNW);
+#ifndef DEBUG
 	cbpc.addPredictor(&predictorGW);
 	cbpc.addPredictor(&predictorW);
 	cbpc.addPredictor(&predictorNE);
 	cbpc.addPredictor(&predictorGN);
 	cbpc.addPredictor(&predictorPL);
+#endif
 	cbpc.init();
 	cbpc.predict();
 

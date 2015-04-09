@@ -1,7 +1,6 @@
 #ifndef PGMCBPCCUDA_H_
 #define PGMCBPCCUDA_H_
 
-#include <iostream>
 #include <vector>
 #include "PGMImage.h"
 #include "predictors/Predictor.h"
@@ -16,34 +15,39 @@
 }
 
 struct PGMCBPCCUDA{
-	PGMCBPCCUDA(PGMImage& input, PGMImage& output);
+	PGMCBPCCUDA(PGMImage& input, PGMImage& output, PGMImage& outputError);
 	~PGMCBPCCUDA();
 
-	void init();
-	void addPredictor(Predictor* predictor);
+	bool init();
+	bool addPredictor(Predictor* predictor);
 	void predict();
 
-	void getStaticPrediction(unsigned i);
+	bool getStaticPrediction(unsigned i);
 
 private:
+	bool locked;
+
 	PGMImage& input;
 	PGMImage& output;
-	Predictor* predictor[MAX_PREDICTORS];
-	unsigned w, h, size, numOfPredictors;
+	PGMImage& outputError;
+	std::vector<Predictor*> predictors;
+	unsigned w, h, size;
 	unsigned radiusOffsetx[R_A];
 	unsigned radiusOffsety[R_A];
 	unsigned vectorOffsetx[D];
 	unsigned vectorOffsety[D];
 	byte* iData;
 	byte* oData;
+	int* predictionError;
 
-	void* dPredicted[MAX_PREDICTORS];
+	void** dPredicted;
 	void* dRadiusOffsetx;
 	void* dRadiusOffsety;
 	void* dVectorOffsetx;
 	void* dVectorOffsety;
-	void* doData;
 	void* diData;
+	void* doData;
+	void* dPredictionError;
 };
 
 #endif /* PGMCBPCCUDA_H_ */

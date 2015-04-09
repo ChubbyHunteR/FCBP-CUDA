@@ -1,14 +1,15 @@
 CC = nvcc
 CFLAGS = -O3 -std=c++11
+CFLAGS_DEBUG = -g -G -std=c++11 -DDEBUG
 
 PROJECT = cbpc
 OBJECTS = PGMImage.o PGMAverage.o PGMCBPCCUDA.o PredictorN.o PredictorNW.o PredictorGW.o PredictorW.o PredictorNE.o PredictorGN.o PredictorPL.o main.o
-#HEADERS = config.h PGMImage.h PGMAverage.h PGMCBPCCUDA.h Predictor.h
-#SOURCES = PGMImage.cpp PGMAverage.cpp PGMCBPCCUDA.cu Predictor.cu main.cpp
-LIBRARIES =
+OBJECTS_DEBUG = PGMImage_d.o PGMAverage_d.o PGMCBPCCUDA_d.o PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_d.o PredictorNE_d.o PredictorGN_d.o PredictorPL_d.o main_d.o
 
-all: $(PROJECT)
 
+###########
+# RELEASE #
+###########
 $(PROJECT): $(OBJECTS)
 	$(CC) -o $(PROJECT) $(CFLAGS) $(OBJECTS)
 
@@ -45,5 +46,47 @@ PGMImage.o: PGMImage.cpp PGMImage.h
 main.o: main.cpp config.h
 	$(CC) -c -o main.o $(CFLAGS) -c main.cpp
 
+
+#########
+# DEBUG #
+#########
+debug: $(OBJECTS_DEBUG)
+	$(CC) -o $(PROJECT) $(CFLAGS_DEBUG) $(OBJECTS_DEBUG)
+
+PGMCBPCCUDA_d.o: PGMCBPCCUDA.cu PGMCBPCCUDA.h config.h
+	$(CC) -c -o PGMCBPCCUDA_d.o $(CFLAGS_DEBUG) -c PGMCBPCCUDA.cu
+
+PredictorN_d.o: predictors/PredictorN.cu predictors/PredictorN.h
+	$(CC) -c -o PredictorN_d.o $(CFLAGS_DEBUG) -c predictors/PredictorN.cu
+
+PredictorNW_d.o: predictors/PredictorNW.cu predictors/PredictorNW.h
+	$(CC) -c -o PredictorNW_d.o $(CFLAGS_DEBUG) -c predictors/PredictorNW.cu
+
+PredictorGW_d.o: predictors/PredictorGW.cu predictors/PredictorGW.h
+	$(CC) -c -o PredictorGW_d.o $(CFLAGS_DEBUG) -c predictors/PredictorGW.cu
+
+PredictorW_d.o: predictors/PredictorW.cu predictors/PredictorW.h
+	$(CC) -c -o PredictorW_d.o $(CFLAGS_DEBUG) -c predictors/PredictorW.cu
+
+PredictorNE_d.o: predictors/PredictorNE.cu predictors/PredictorNE.h
+	$(CC) -c -o PredictorNE_d.o $(CFLAGS_DEBUG) -c predictors/PredictorNE.cu
+
+PredictorGN_d.o: predictors/PredictorGN.cu predictors/PredictorGN.h
+	$(CC) -c -o PredictorGN_d.o $(CFLAGS_DEBUG) -c predictors/PredictorGN.cu
+
+PredictorPL_d.o: predictors/PredictorPL.cu predictors/PredictorPL.h
+	$(CC) -c -o PredictorPL_d.o $(CFLAGS_DEBUG) -c predictors/PredictorPL.cu
+
+PGMAverage_d.o: PGMAverage.cpp PGMAverage.h config.h
+	$(CC) -c -o PGMAverage_d.o $(CFLAGS_DEBUG) PGMAverage.cpp
+
+PGMImage_d.o: PGMImage.cpp PGMImage.h
+	$(CC) -c -o PGMImage_d.o $(CFLAGS_DEBUG) -c PGMImage.cpp
+
+main_d.o: main.cpp config.h
+	$(CC) -c -o main_d.o $(CFLAGS_DEBUG) -c main.cpp
+
+
+
 clean:
-	-rm -f $(PROJECT) $(OBJECTS) *.o
+	-rm -f $(PROJECT) *.o

@@ -5,7 +5,7 @@
  * R defines the radius in number of pixels. Radius is number of pixels left, right and top from the "current" pixel taken into
  * account when searching for similar pixels (pixels with similar vector). All the taken pixels form an area of R_A pixels, equal to (R+1) times (2R+1) minus R.
  */
-#define R 100
+#define R 5
 #define R_A (2 * R * (R  + 1) + 1)
 
 /*
@@ -23,10 +23,12 @@
 /*
 * THREADS defines the number of threads per block to run on the GPU.
 */
-#define THREADS 512
+#ifdef DEBUG
+	#define THREADS 64
+#else
+	#define THREADS 512
+#endif
 
 #define LOOP 20
-
-#define MAX_PREDICTORS 10
 
 #endif /* CONFIG_H_ */
