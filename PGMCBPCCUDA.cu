@@ -135,6 +135,9 @@ PGMCBPCCUDA::~PGMCBPCCUDA(){
 	CUDA_CHECK_RETURN(cudaFree((void*) doData));
 	CUDA_CHECK_RETURN(cudaFree((void*) dPredictionError));
 	CUDA_CHECK_RETURN(cudaDeviceReset());
+
+	delete iData;
+	delete oData;
 }
 
 bool PGMCBPCCUDA::init(){
