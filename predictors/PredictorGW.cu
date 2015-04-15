@@ -16,7 +16,14 @@ namespace {
 		if(x < w && y < h){
 			sum += 2 * iData[y * w + x];
 		}
-		return sum;
+
+		if(sum < 0){
+			return 0;
+		}else if(sum > 255){
+			return 255;
+		}else{
+			return sum;
+		}
 	}
 
 	__global__ void predict(void *diData, void *dPredicted, unsigned w, unsigned h) {
