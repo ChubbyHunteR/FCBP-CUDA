@@ -36,6 +36,9 @@ public:
 	// Used when the PGMImage object is used to write into pgm image file
 	PGMImage(const char* imgName, unsigned width, unsigned height, byte pixelMax);
 	
+    // Emplace back needs the copy constructor
+	PGMImage(PGMImage&& other);
+
     //destructor
 	virtual ~PGMImage();
 
@@ -60,6 +63,9 @@ public:
     // returns the pixel at the pPos position when the image is viewed as 
     // an array of pixels in raster scan order
     byte getPixel(unsigned pPos);
+
+    // returns the pixel buffer
+    byte* getBuffer();
 
     // takes the pixels from the (xPos, yPos) to (xPos + size -1, yPos) in the
     // pgm image and fills the buff array
@@ -95,7 +101,7 @@ protected:
 	// mod of operation: It can be ios::in or ios::out
 	ios_base::openmode modM;
 	
-    fstream imgFileM;   // input image stream
+    fstream* imgFileM;   // input image stream
     string imgNameM;    // image filename
 	
 	// image memory buffer

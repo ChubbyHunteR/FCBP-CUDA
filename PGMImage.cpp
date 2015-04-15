@@ -31,17 +31,17 @@ using namespace std;
 //          the object that reads the pgm image file (for input)
 /////////////////////////////////////////////////////////////////////////////
 PGMImage::PGMImage(const char* imgName)
- : modM(ios::in), imgFileM(imgName, ios::in | ios::binary), imgNameM(imgName), heightM(0), pixelMaxM(0), widthM(0)
+ : modM(ios::in), imgFileM( new fstream(imgName, ios::in | ios::binary) ), imgNameM(imgName), heightM(0), pixelMaxM(0), widthM(0)
 {	
 	// this part simply checks if magic number is included in the file
 	// it doesn't check all possible errors in file format
 	//char tmp[5];
-	if(imgFileM.fail()){
+	if(imgFileM->fail()){
 		cerr<<"Opening of input file failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 	string tmp;
-	imgFileM >> tmp;
+	*imgFileM >> tmp;
 	string magicNum(tmp);
 	if (magicNum != "P5") {
         std::cerr << "Wrong file format " << imgName << endl;
@@ -50,17 +50,12 @@ PGMImage::PGMImage(const char* imgName)
 
   string line;
   string comment("#");
-  
-  //Za Marka:
-  //imgFileM >> dummy1 >> dummy2 >> dummy3 >> dummy4>>dummy1 >> dummy2 >> dummy3;
-
- 
  
   //Provjera postoji li linija koja zapocinje s #
   //Ocekuje se komentar u drugoj liniji
-  imgFileM>>line;
+  *imgFileM >> line;
   while(!isdigit(line[0]))
-    imgFileM>>line;
+    *imgFileM >> line;
     
     
   istringstream stream(line);
@@ -68,14 +63,14 @@ PGMImage::PGMImage(const char* imgName)
   
 	// we presume that there's no lines starting with '#' in header
 	// read image width, height, and maxPixelValue
-	imgFileM >> heightM >> pixelMaxM;
+	*imgFileM >> heightM >> pixelMaxM;
 	
 	// ignores next char (whitespace)
-	imgFileM.ignore();
+	imgFileM->ignore();
 		
 	// buffer pixels into imgBufferM
 	imgBufferM = new byte[widthM * heightM];
-	imgFileM.read((char*)imgBufferM, widthM * heightM);
+	imgFileM->read((char*)imgBufferM, widthM * heightM);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,19 +81,33 @@ PGMImage::PGMImage(const char* imgName)
 //				the pixel buffer and writes the header into output pgm file.
 ////////////////////////////////////////////////////////////////////////////////
 PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, byte pixelMax)
- : modM(ios::out), imgFileM(imgName, ios::binary | ios::out), 
+ : modM(ios::out), imgFileM( new fstream(imgName, ios::binary | ios::out) ),
    widthM(width), heightM(height), pixelMaxM(pixelMax)
 {        
-	if(imgFileM.fail()){
+	if(imgFileM->fail()){
 		cerr<<"Opening of output file failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 
     imgBufferM = new unsigned char[widthM * heightM];
             
-    imgFileM << "P5\n" << widthM << " " << heightM << "\n"
+    *imgFileM << "P5\n" << widthM << " " << heightM << "\n"
                << pixelMaxM << endl;
     
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Function:	PGMImage(PGMImage&& other)
+//
+// Purpose:		Moves the PGMImage to a new object.
+////////////////////////////////////////////////////////////////////////////////
+PGMImage::PGMImage(PGMImage&& other)
+ : widthM(other.widthM), heightM(other.heightM), modM(other.modM),
+   imgFileM(other.imgFileM), imgNameM(other.imgNameM), imgBufferM(other.imgBufferM)
+{
+	other.imgBufferM = nullptr;
+	other.imgFileM = nullptr;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,15 +116,17 @@ PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, byte pi
 // Purpose:		Destructor
 ///////////////////////////////////////////////////////////////////////////////
 PGMImage::~PGMImage() {
-    if (modM == ios::in) {
-        // free the allocated buffer
-        delete[] imgBufferM;
-    } else {
+	if(imgBufferM == nullptr){
+		return;
+	}
+
+    if (modM != ios::in) {
         // if out mode we need to flush the pixel buffer into file 
-        imgFileM.write( ((char*)(imgBufferM)), widthM * heightM);    
-        // free the allocated buffer
-        delete[] imgBufferM;
-    } 
+        imgFileM->write( ((char*)(imgBufferM)), widthM * heightM);
+    }
+    // free the allocated buffer
+    delete[] imgBufferM;
+    delete imgFileM;
 }
 ////////////////// ! construction & destruction ////////////////////////////
 
@@ -147,6 +158,14 @@ byte PGMImage::getPixel(unsigned pPos) {
         exit(EXIT_FAILURE);
     }
     return imgBufferM[pPos];
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Function: getBuffer()
+// Purpose: Returns the pixel buffer
+//////////////////////////////////////////////////////////////////////////////
+byte* PGMImage::getBuffer() {
+    return imgBufferM;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

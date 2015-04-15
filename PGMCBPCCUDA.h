@@ -5,6 +5,7 @@
 #include "PGMImage.h"
 #include "predictors/Predictor.h"
 #include "config.h"
+#include "util.h"
 
 #define CUDA_CHECK_RETURN(value) {																						\
 	cudaError_t _m_cudaStat = value;																					\
@@ -15,39 +16,35 @@
 }
 
 struct PGMCBPCCUDA{
-	PGMCBPCCUDA(PGMImage& input, PGMImage& output, PGMImage& outputError);
+	PGMCBPCCUDA(vector<PGMImage>& inputImages,
+				vector<PGMImage>& outputImages,
+				vector<PGMImage>& errorImages,
+				vector<Predictor*>& predictors
+				);
 	~PGMCBPCCUDA();
 
-	bool init();
-	bool addPredictor(Predictor* predictor);
 	void predict();
 
-	bool getStaticPrediction(unsigned i);
-
 private:
-	bool locked;
+	vector<PGMImage>& inputImages;
+	vector<PGMImage>& outputImages;
+	vector<PGMImage>& errorImages;
+	vector<Predictor*>& predictors;
 
-	PGMImage& input;
-	PGMImage& output;
-	PGMImage& outputError;
-	std::vector<Predictor*> predictors;
-	unsigned w, h, size;
-	unsigned radiusOffsetx[R_A];
-	unsigned radiusOffsety[R_A];
-	unsigned vectorOffsetx[D];
-	unsigned vectorOffsety[D];
-	byte* iData;
-	byte* oData;
-	int* predictionError;
+	vector<ImageWHSize> imagesMeta;
+	vector<byte*> iData;
+	vector<byte*> oData;
+	vector<short*> eData;
 
-	void** dPredicted;
-	void* dRadiusOffsetx;
-	void* dRadiusOffsety;
-	void* dVectorOffsetx;
-	void* dVectorOffsety;
-	void* diData;
-	void* doData;
-	void* dPredictionError;
+	PixelOffset radiusOffset[R_A];
+	PixelOffset vectorOffset[D];
+
+	vector<void*> diData;
+	vector<void*> doData;
+	vector<void*> deData;
+	vector<void**> dPredicted;
+	void* dRadiusOffset;
+	void* dVectorOffset;
 };
 
 #endif /* PGMCBPCCUDA_H_ */

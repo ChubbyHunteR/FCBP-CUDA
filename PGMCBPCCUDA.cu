@@ -25,14 +25,22 @@ namespace {
 		}
 	}
 
-	__device__ unsigned distance(byte* iData, unsigned anchorX, unsigned anchorY, unsigned x, unsigned y, unsigned* vectorOffsetx, unsigned* vectorOffsety, unsigned w, unsigned h){
+	__device__ unsigned distance(	byte* iData,
+									unsigned anchorX,
+									unsigned anchorY,
+									unsigned x,
+									unsigned y,
+									PixelOffset* vectorOffset,
+									unsigned w,
+									unsigned h)
+	{
 		unsigned x1, x2, y1, y2, sum = 0;
 		int pix1, pix2;
 		for(int i = 0; i < D; ++i){
-			x1 = anchorX + vectorOffsetx[i];
-			y1 = anchorY + vectorOffsety[i];
-			x2 = x + vectorOffsetx[i];
-			y2 = y + vectorOffsety[i];
+			x1 = anchorX + vectorOffset[i].x;
+			y1 = anchorY + vectorOffset[i].y;
+			x2 = x + vectorOffset[i].x;
+			y2 = y + vectorOffset[i].y;
 			pix1 = pix2 = 0;
 			if(x1 < w && y1 < h){
 				pix1 = iData[x1 + y1 * w];
@@ -45,7 +53,14 @@ namespace {
 		return sum;
 	}
 
-	__device__ byte predict(byte* iData, byte** predicted, unsigned numOfPredictors, unsigned* radiusOffsetx, unsigned* radiusOffsety, unsigned* vectorOffsetx, unsigned* vectorOffsety, unsigned w, unsigned h) {
+	__device__ byte predict(byte* iData,
+							byte** predicted,
+							unsigned numOfPredictors,
+							PixelOffset* radiusOffset,
+							PixelOffset* vectorOffset,
+							unsigned w,
+							unsigned h)
+	{
 		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
 		unsigned anchorX = absolutePosition % w;
 		unsigned anchorY = absolutePosition / w;
@@ -56,10 +71,10 @@ namespace {
 		float* penalties = new float[numOfPredictors];
 
 		for(int i = 0; i < R_A; ++i){
-			x = anchorX + radiusOffsetx[i];
-			y = anchorY + radiusOffsety[i];
+			x = anchorX + radiusOffset[i].x;
+			y = anchorY + radiusOffset[i].y;
 			if(x < w && y < h){
-				dist = distance(iData, anchorX, anchorY, x, y, vectorOffsetx, vectorOffsety, w, h);
+				dist = distance(iData, anchorX, anchorY, x, y, vectorOffset, w, h);
 				insert(dist, x, y, similarPixelsX, similarPixelsY, similarPixelsDistance, &numOfSimilarPixels);
 			}
 		}
@@ -93,134 +108,133 @@ namespace {
 		}
 	}
 
-	__global__ void predict(void* diData, void* doData, void** dPredicted, unsigned numOfPredictors, void* dPredictionError, void* dRadiusOffsetx, void* dRadiusOffsety, void* dVectorOffsetx, void* dVectorOffsety, unsigned w, unsigned h) {
+	__global__ void predict(void* diData,
+							void* doData,
+							void* deData,
+							void** dPredicted,
+							unsigned numOfPredictors,
+							void* dRadiusOffset,
+							void* dVectorOffset,
+							ImageWHSize imageMeta)
+	{
 		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
-		if(absolutePosition >= w*h){
+		if(absolutePosition >= imageMeta.size){
 			return;
 		}
 
 		byte* iData = (byte*) diData;
 		byte* oData = (byte*) doData;
+		short* eData = (short*) deData;
 		byte** predicted = (byte**) dPredicted;
-		int* predictionError = (int*) dPredictionError;
 
-		unsigned* radiusOffsetx = (unsigned*) dRadiusOffsetx;
-		unsigned* radiusOffsety = (unsigned*) dRadiusOffsety;
-		unsigned* vectorOffsetx = (unsigned*) dVectorOffsetx;
-		unsigned* vectorOffsety = (unsigned*) dVectorOffsety;
+		PixelOffset* radiusOffset = (PixelOffset*) dRadiusOffset;
+		PixelOffset* vectorOffset = (PixelOffset*) dVectorOffset;
 
-		int prediction = predict(iData, predicted, numOfPredictors, radiusOffsetx, radiusOffsety, vectorOffsetx, vectorOffsety, w, h);
+		short prediction = predict(iData, predicted, numOfPredictors, radiusOffset, vectorOffset, imageMeta.w, imageMeta.h);
 		oData[absolutePosition] = prediction;
-		predictionError[absolutePosition] = iData[absolutePosition] - prediction;
+		eData[absolutePosition] = iData[absolutePosition] - prediction;
 	}
 }
 
-PGMCBPCCUDA::PGMCBPCCUDA(PGMImage& input, PGMImage& output, PGMImage& outputError):locked(false), input(input), output(output), outputError(outputError), w(input.getWidth()), h(input.getHeight()), size(input.getSize()){
+PGMCBPCCUDA::PGMCBPCCUDA(	vector<PGMImage>& inputImages,
+							vector<PGMImage>& outputImages,
+							vector<PGMImage>& errorImages,
+							vector<Predictor*>& predictors
+						):
+		inputImages(inputImages),
+		outputImages(outputImages),
+		errorImages(errorImages),
+		predictors(predictors)
+{
+	for(auto& inputImage : inputImages){
+		imagesMeta.emplace_back(inputImage.getWidth(), inputImage.getHeight(), inputImage.getSize());
+		iData.push_back(inputImage.getBuffer());
+	}
+	for(auto& outputImage : outputImages){
+		oData.push_back(outputImage.getBuffer());
+	}
+	for(auto& imageMeta : imagesMeta){
+		eData.push_back(new short[imageMeta.size]);
+	}
+
 	for(int i = 0; i < R_A; ++i){
-		radiusOffsetx[i] = i % (2*R + 1) - R;
-		radiusOffsety[i] = i / (2*R + 1) - R;
+		radiusOffset[i].x = i % (2*R + 1) - R;
+		radiusOffset[i].y = i / (2*R + 1) - R;
 	}
 	for(int i = 0; i < D; ++i){
-		vectorOffsetx[i] = i % (D_R + 2) - D_R;
-		vectorOffsety[i] = i / (D_R + 2) - D_R;
+		vectorOffset[i].x = i % (D_R + 2) - D_R;
+		vectorOffset[i].y = i / (D_R + 2) - D_R;
 	}
+
+	for(int i = 0; i < iData.size(); ++i){
+		cout<<"Static prediction "<<i+1<<"/"<<iData.size()<<endl;
+		diData.push_back(NULL);
+		doData.push_back(NULL);
+		deData.push_back(NULL);
+		dPredicted.push_back(NULL);
+
+		CUDA_CHECK_RETURN(cudaMalloc(&diData[i], sizeof(byte) * imagesMeta[i].size));
+		CUDA_CHECK_RETURN(cudaMalloc(&doData[i], sizeof(byte) * imagesMeta[i].size));
+		CUDA_CHECK_RETURN(cudaMalloc(&deData[i], sizeof(short) * imagesMeta[i].size));
+		CUDA_CHECK_RETURN(cudaMemcpy(diData[i], iData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyHostToDevice));
+
+		CUDA_CHECK_RETURN(cudaMalloc(&dPredicted[i], sizeof(void*) * predictors.size()));
+		vector<void*> hPredicted(predictors.size());
+		for(int j = 0; j < predictors.size(); ++j){
+			CUDA_CHECK_RETURN(cudaMalloc(&hPredicted[j], sizeof(byte) * imagesMeta[i].size));
+			predictors[j]->predict(diData[i], hPredicted[j], imagesMeta[i].w, imagesMeta[i].h);
+		}
+		CUDA_CHECK_RETURN(cudaMemcpy(dPredicted[i], hPredicted.data(), sizeof(void*) * predictors.size(), cudaMemcpyHostToDevice));
+		cout<<"DONE"<<endl;
+	}
+
+	CUDA_CHECK_RETURN(cudaMalloc(&dRadiusOffset, sizeof(radiusOffset)));
+	CUDA_CHECK_RETURN(cudaMemcpy(dRadiusOffset, radiusOffset, sizeof(radiusOffset), cudaMemcpyHostToDevice));
+
+	CUDA_CHECK_RETURN(cudaMalloc(&dVectorOffset, sizeof(vectorOffset)));
+	CUDA_CHECK_RETURN(cudaMemcpy(dVectorOffset, vectorOffset, sizeof(vectorOffset), cudaMemcpyHostToDevice));
 }
 
 PGMCBPCCUDA::~PGMCBPCCUDA(){
-	CUDA_CHECK_RETURN(cudaFree((void*) dRadiusOffsetx));
-	CUDA_CHECK_RETURN(cudaFree((void*) dRadiusOffsety));
-	CUDA_CHECK_RETURN(cudaFree((void*) dVectorOffsetx));
-	CUDA_CHECK_RETURN(cudaFree((void*) dVectorOffsety));
-	CUDA_CHECK_RETURN(cudaFree((void*) diData));
-	CUDA_CHECK_RETURN(cudaFree((void*) doData));
-	CUDA_CHECK_RETURN(cudaFree((void*) dPredictionError));
 	CUDA_CHECK_RETURN(cudaDeviceReset());
-
-	delete iData;
-	delete oData;
-}
-
-bool PGMCBPCCUDA::init(){
-	if(locked){
-		return false;
-	}
-	locked = true;
-
-	iData = new byte[size];
-	oData = new byte[size];
-	input.readIntoArray(iData, 0, size);
-	predictionError = new int[size];
-
-	CUDA_CHECK_RETURN(cudaMalloc(&diData, sizeof(byte) * size));
-	CUDA_CHECK_RETURN(cudaMalloc(&doData, sizeof(byte) * size));
-	CUDA_CHECK_RETURN(cudaMemcpy(diData, iData, sizeof(byte) * size, cudaMemcpyHostToDevice));
-	CUDA_CHECK_RETURN(cudaMalloc(&dPredictionError, sizeof(int) * size));
-
-	CUDA_CHECK_RETURN(cudaMalloc(&dRadiusOffsetx, sizeof(radiusOffsetx)));
-	CUDA_CHECK_RETURN(cudaMalloc(&dRadiusOffsety, sizeof(radiusOffsety)));
-	CUDA_CHECK_RETURN(cudaMemcpy(dRadiusOffsetx, radiusOffsetx, sizeof(radiusOffsetx), cudaMemcpyHostToDevice));
-	CUDA_CHECK_RETURN(cudaMemcpy(dRadiusOffsety, radiusOffsety, sizeof(radiusOffsety), cudaMemcpyHostToDevice));
-
-	CUDA_CHECK_RETURN(cudaMalloc(&dVectorOffsetx, sizeof(vectorOffsetx)));
-	CUDA_CHECK_RETURN(cudaMalloc(&dVectorOffsety, sizeof(vectorOffsety)));
-	CUDA_CHECK_RETURN(cudaMemcpy(dVectorOffsetx, vectorOffsetx, sizeof(vectorOffsetx), cudaMemcpyHostToDevice));
-	CUDA_CHECK_RETURN(cudaMemcpy(dVectorOffsety, vectorOffsety, sizeof(vectorOffsety), cudaMemcpyHostToDevice));
-
-	CUDA_CHECK_RETURN(cudaMalloc(&dPredicted, sizeof(void*) * predictors.size()));
-	void** hPredicted = new void*[predictors.size()];
-	for(int i = 0; i < predictors.size(); ++i){
-		CUDA_CHECK_RETURN(cudaMalloc(&hPredicted[i], sizeof(byte) * size));
-		predictors[i]->predict(diData, hPredicted[i], w, h);
-	}
-	CUDA_CHECK_RETURN(cudaMemcpy(dPredicted, hPredicted, sizeof(void*) * predictors.size(), cudaMemcpyHostToDevice));
-	delete hPredicted;
-
-	return true;
-}
-
-bool PGMCBPCCUDA::addPredictor(Predictor* predictor){
-	if(locked){
-		return false;
-	}
-	predictors.push_back(predictor);
-	return true;
 }
 
 void PGMCBPCCUDA::predict(){
-	#ifdef DEBUG
-	::predict<<<1, THREADS>>>(diData, doData, dPredicted, predictors.size(), dPredictionError, dRadiusOffsetx, dRadiusOffsety, dVectorOffsetx, dVectorOffsety, w, h);
-	#else
-	::predict<<<size/THREADS + 1, THREADS>>>(diData, doData, dPredicted, predictors.size(), dPredictionError, dRadiusOffsetx, dRadiusOffsety, dVectorOffsetx, dVectorOffsety, w, h);
-	#endif
-	CUDA_CHECK_RETURN(cudaMemcpy(oData, doData, sizeof(byte) * size, cudaMemcpyDeviceToHost));
-	CUDA_CHECK_RETURN(cudaMemcpy(predictionError, dPredictionError, sizeof(int) * size, cudaMemcpyDeviceToHost));
+	for(int i = 0; i < inputImages.size(); ++i){
+		cout<<"Prediction "<<i+1<<"/"<<inputImages.size()<<endl;
+		#ifdef DEBUG
+		::predict<<<1, THREADS>>>(	diData[i],
+									doData[i],
+									deData[i],
+									dPredicted[i],
+									predictors.size(),
+									dRadiusOffset,
+									dVectorOffset,
+									imagesMeta[i]
+								);
+		#else
+		::predict<<<imagesMeta[i].size/THREADS + 1, THREADS>>>(	diData[i],
+																	doData[i],
+																	deData[i],
+																	dPredicted[i],
+																	predictors.size(),
+																	dRadiusOffset,
+																	dVectorOffset,
+																	imagesMeta[i]
+																);
+		#endif
+		CUDA_CHECK_RETURN(cudaMemcpy(oData[i], doData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
+		CUDA_CHECK_RETURN(cudaMemcpy(eData[i], deData[i], sizeof(short) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 
-	for(unsigned j = 0; j < h; ++j){
-		for(unsigned i = 0; i < w; ++i){
-			output.writePixel(i, j, oData[i + j*w]);
-		}
-	}
-	for(unsigned j = 0; j < h; ++j){
-		for(unsigned i = 0; i < w; ++i){
-			int error = predictionError[i + j*w];
-			if(error < 0){
-				error = -error;
+		for(unsigned k = 0; k < imagesMeta[i].h; ++k){
+			for(unsigned j = 0; j < imagesMeta[i].w; ++j){
+				short error = eData[i][j + k*imagesMeta[i].w];
+				if(error < 0){
+					error = -error;
+				}
+				errorImages[i].writePixel(j, k, error);
 			}
-			outputError.writePixel(i, j, error);
 		}
+		cout<<"DONE"<<endl;
 	}
-}
-
-bool PGMCBPCCUDA::getStaticPrediction(unsigned i){
-	if(i >= predictors.size()){
-		return false;
-	}
-	CUDA_CHECK_RETURN(cudaMemcpy(oData, dPredicted[i], sizeof(byte) * size, cudaMemcpyDeviceToHost));
-
-	for(unsigned j = 0; j < h; ++j){
-		for(unsigned i = 0; i < w; ++i){
-			output.writePixel(i, j, oData[i + j*w]);
-		}
-	}
-	return true;
 }

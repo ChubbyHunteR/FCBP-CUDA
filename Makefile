@@ -10,10 +10,13 @@ OBJECTS_DEBUG = PGMImage_d.o PGMAverage_d.o PGMCBPCCUDA_d.o PredictorN_d.o Predi
 ###########
 # RELEASE #
 ###########
+
+all: $(PROJECT)
+
 $(PROJECT): $(OBJECTS)
 	$(CC) -o $(PROJECT) $(CFLAGS) $(OBJECTS)
 
-PGMCBPCCUDA.o: PGMCBPCCUDA.cu PGMCBPCCUDA.h config.h
+PGMCBPCCUDA.o: PGMCBPCCUDA.cu PGMCBPCCUDA.h config.h util.h
 	$(CC) -c -o PGMCBPCCUDA.o $(CFLAGS) -c PGMCBPCCUDA.cu
 
 PredictorN.o: predictors/PredictorN.cu predictors/PredictorN.h
@@ -53,7 +56,7 @@ main.o: main.cpp config.h
 debug: $(OBJECTS_DEBUG)
 	$(CC) -o $(PROJECT) $(CFLAGS_DEBUG) $(OBJECTS_DEBUG)
 
-PGMCBPCCUDA_d.o: PGMCBPCCUDA.cu PGMCBPCCUDA.h config.h
+PGMCBPCCUDA_d.o: PGMCBPCCUDA.cu PGMCBPCCUDA.h config.h util.h
 	$(CC) -c -o PGMCBPCCUDA_d.o $(CFLAGS_DEBUG) -c PGMCBPCCUDA.cu
 
 PredictorN_d.o: predictors/PredictorN.cu predictors/PredictorN.h
