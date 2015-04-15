@@ -24,6 +24,7 @@ struct PGMCBPCCUDA{
 	~PGMCBPCCUDA();
 
 	void predict();
+	bool getStaticPrediction(unsigned i);
 
 private:
 	vector<PGMImage>& inputImages;

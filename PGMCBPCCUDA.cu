@@ -197,23 +197,15 @@ PGMCBPCCUDA::PGMCBPCCUDA(	vector<PGMImage>& inputImages,
 
 PGMCBPCCUDA::~PGMCBPCCUDA(){
 	CUDA_CHECK_RETURN(cudaDeviceReset());
+	for(auto p : eData){
+		delete[] p;
+	}
 }
 
 void PGMCBPCCUDA::predict(){
 	for(int i = 0; i < inputImages.size(); ++i){
 		cout<<"Prediction "<<i+1<<"/"<<inputImages.size()<<endl;
-		#ifdef DEBUG
-		::predict<<<1, THREADS>>>(	diData[i],
-									doData[i],
-									deData[i],
-									dPredicted[i],
-									predictors.size(),
-									dRadiusOffset,
-									dVectorOffset,
-									imagesMeta[i]
-								);
-		#else
-		::predict<<<imagesMeta[i].size/THREADS + 1, THREADS>>>(	diData[i],
+		::predict<<<imagesMeta[i].size/THREADS + 1, THREADS>>>(		diData[i],
 																	doData[i],
 																	deData[i],
 																	dPredicted[i],
@@ -222,7 +214,6 @@ void PGMCBPCCUDA::predict(){
 																	dVectorOffset,
 																	imagesMeta[i]
 																);
-		#endif
 		CUDA_CHECK_RETURN(cudaMemcpy(oData[i], doData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 		CUDA_CHECK_RETURN(cudaMemcpy(eData[i], deData[i], sizeof(short) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 
@@ -237,4 +228,19 @@ void PGMCBPCCUDA::predict(){
 		}
 		cout<<"DONE"<<endl;
 	}
+}
+
+bool PGMCBPCCUDA::getStaticPrediction(unsigned predictorIndex){
+	if(predictorIndex >= predictors.size()){
+		return false;
+	}
+
+	for(int i = 0; i < inputImages.size(); ++i){
+		void** hPredicted = new void*[predictors.size()];
+		CUDA_CHECK_RETURN(cudaMemcpy(hPredicted, dPredicted[i], sizeof(void*) * predictors.size(), cudaMemcpyDeviceToHost));
+		CUDA_CHECK_RETURN(cudaMemcpy(oData[i], hPredicted[predictorIndex], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
+		delete[] hPredicted;
+	}
+
+	return true;
 }

@@ -8,7 +8,7 @@ namespace {
 		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
 		unsigned x = absolutePosition % w - 1;
 		unsigned y = absolutePosition / w - 1;
-		unsigned sum = 0;
+		short sum = 0;
 		if(x < w && y < h){
 			sum -= iData[y * w + x];
 		}
