@@ -6,7 +6,7 @@
  * account when searching for similar pixels (pixels with similar vector). All the taken pixels form an area of R_A pixels, equal to (R+1) times (2R+1) minus R.
  */
 #define R 5
-#define R_A (2 * R * (R  + 1) + 1)
+#define R_A (2 * R * (R  + 1))
 
 /*
 * D_R defines the radius of pixel's vector when comparing it to other pixels. In reality, we compare the vectors.
@@ -23,11 +23,7 @@
 /*
 * THREADS defines the number of threads per block to run on the GPU.
 */
-#ifdef DEBUG
-	#define THREADS 64
-#else
-	#define THREADS 512
-#endif
+#define THREADS 1024
 
 #define LOOP 20
 

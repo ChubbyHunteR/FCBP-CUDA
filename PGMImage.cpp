@@ -37,7 +37,7 @@ PGMImage::PGMImage(const char* imgName)
 	// it doesn't check all possible errors in file format
 	//char tmp[5];
 	if(imgFileM->fail()){
-		cerr<<"Opening of input file failed."<<endl;
+		cerr<<"Opening of input file "<<imgNameM<<" failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 	string tmp;
@@ -102,7 +102,7 @@ PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, byte pi
 // Purpose:		Moves the PGMImage to a new object.
 ////////////////////////////////////////////////////////////////////////////////
 PGMImage::PGMImage(PGMImage&& other)
- : widthM(other.widthM), heightM(other.heightM), modM(other.modM),
+ : widthM(other.widthM), heightM(other.heightM), pixelMaxM(other.getPixelMax()), modM(other.modM),
    imgFileM(other.imgFileM), imgNameM(other.imgNameM), imgBufferM(other.imgBufferM)
 {
 	other.imgBufferM = nullptr;

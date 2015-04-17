@@ -41,6 +41,7 @@ private:
 	PixelOffset vectorOffset[D];
 
 	vector<void*> diData;
+	vector<void*> dpData;
 	vector<void*> doData;
 	vector<void*> deData;
 	vector<void**> dPredicted;

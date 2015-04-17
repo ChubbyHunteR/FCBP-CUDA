@@ -3,24 +3,24 @@
 
 #define SWAP(a, b) (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b)))
 
-namespace {
-	__device__ void insert(unsigned dist, unsigned x, unsigned y, unsigned similarPixelsX[], unsigned similarPixelsY[], unsigned similarPixelsDistance[], unsigned* numOfSimilarPixels){
-		unsigned tmpDist = dist;
-		unsigned tmpPixelX = x;
-		unsigned tmpPixelY = y;
+struct PixelDistance{
+	unsigned x, y, distance;
+	__device__ PixelDistance(unsigned x, unsigned y, unsigned distance) : x(x), y(y), distance(distance){}
+	__device__ PixelDistance() : x(0), y(0), distance(0){}
+};
 
+namespace {
+	__device__ void insert(PixelDistance pixelDist, PixelDistance similarPixels[M], unsigned* numOfSimilarPixels){
 		for(int i = 0; i < *numOfSimilarPixels; ++i){
-			if(tmpDist > similarPixelsDistance[i]){
-				SWAP(tmpDist, similarPixelsDistance[i]);
-				SWAP(tmpPixelX, similarPixelsX[i]);
-				SWAP(tmpPixelY, similarPixelsY[i]);
+			if(pixelDist.distance < similarPixels[i].distance){
+				SWAP(pixelDist.distance, similarPixels[i].distance);
+				SWAP(pixelDist.x, similarPixels[i].x);
+				SWAP(pixelDist.y, similarPixels[i].y);
 			}
 		}
 
 		if(*numOfSimilarPixels < M){
-			similarPixelsDistance[*numOfSimilarPixels] = tmpDist;
-			similarPixelsX[*numOfSimilarPixels] = tmpPixelX;
-			similarPixelsY[*numOfSimilarPixels] = tmpPixelY;
+			similarPixels[*numOfSimilarPixels] = pixelDist;
 			++*numOfSimilarPixels;
 		}
 	}
@@ -34,8 +34,8 @@ namespace {
 									unsigned w,
 									unsigned h)
 	{
-		unsigned x1, x2, y1, y2, sum = 0;
-		int pix1, pix2;
+		unsigned x1, x2, y1, y2;
+		int sum = 0, pix1, pix2;
 		for(int i = 0; i < D; ++i){
 			x1 = anchorX + vectorOffset[i].x;
 			y1 = anchorY + vectorOffset[i].y;
@@ -64,33 +64,38 @@ namespace {
 		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
 		unsigned anchorX = absolutePosition % w;
 		unsigned anchorY = absolutePosition / w;
-		unsigned x, y, dist, numOfSimilarPixels = 0;
-		unsigned similarPixelsDistance[M];
-		unsigned similarPixelsX[M];
-		unsigned similarPixelsY[M];
-		float* penalties = new float[numOfPredictors];
-
-		for(int i = 0; i < R_A; ++i){
-			x = anchorX + radiusOffset[i].x;
-			y = anchorY + radiusOffset[i].y;
-			if(x < w && y < h){
-				dist = distance(iData, anchorX, anchorY, x, y, vectorOffset, w, h);
-				insert(dist, x, y, similarPixelsX, similarPixelsY, similarPixelsDistance, &numOfSimilarPixels);
-			}
+		unsigned numOfSimilarPixels = 0;
+		PixelDistance similarPixels[M];
+		PixelDistance pixelDist;
+		if(numOfPredictors == 0){
+			return 0;
 		}
 
+		for(int i = 0; i < R_A; ++i){
+			pixelDist.x = anchorX + radiusOffset[i].x;
+			pixelDist.y = anchorY + radiusOffset[i].y;
+			if(pixelDist.x < w && pixelDist.y < h){
+				pixelDist.distance = distance(iData, anchorX, anchorY, pixelDist.x, pixelDist.y, vectorOffset, w, h);
+				insert(pixelDist, similarPixels, &numOfSimilarPixels);
+			}
+		}
+		if(numOfSimilarPixels == 0){
+			return 0;
+		}
+
+		float* penalties = new float[numOfPredictors];
 		for(int i = 0; i < numOfPredictors; ++i){
 			unsigned sum = 0;
 			for(int j = 0; j < numOfSimilarPixels; ++j){
-				int prediction = predicted[i][similarPixelsX[j] + similarPixelsY[j] * w ];
-				int pixel = iData[ similarPixelsX[j] + similarPixelsY[j] * w ];
+				int prediction = predicted[i][similarPixels[j].x + similarPixels[j].y * w ];
+				int pixel = iData[ similarPixels[j].x + similarPixels[j].y * w ];
 				sum += (prediction - pixel) * (prediction - pixel);
 			}
-			if(numOfSimilarPixels == 0){
-				penalties[i] = 0;
-			}else{
-				penalties[i] = (float)sum / numOfSimilarPixels;
+			if(sum == 0){
+				delete[] penalties;
+				return predicted[i][absolutePosition];
 			}
+			penalties[i] = (float)sum / numOfSimilarPixels;
 		}
 
 		float sum = 0;
@@ -99,18 +104,12 @@ namespace {
 			sum += predicted[i][absolutePosition] / penalties[i];
 			penaltiesSum += 1 / penalties[i];
 		}
-
-		delete penalties;
-		if(penaltiesSum == 0){
-			return 0;
-		}else{
-			return sum / penaltiesSum;
-		}
+		delete[] penalties;
+		return sum / penaltiesSum;
 	}
 
 	__global__ void predict(void* diData,
-							void* doData,
-							void* deData,
+							void* dpData,
 							void** dPredicted,
 							unsigned numOfPredictors,
 							void* dRadiusOffset,
@@ -123,14 +122,63 @@ namespace {
 		}
 
 		byte* iData = (byte*) diData;
-		byte* oData = (byte*) doData;
-		short* eData = (short*) deData;
+		byte* pData = (byte*) dpData;
 		byte** predicted = (byte**) dPredicted;
-
 		PixelOffset* radiusOffset = (PixelOffset*) dRadiusOffset;
 		PixelOffset* vectorOffset = (PixelOffset*) dVectorOffset;
 
-		short prediction = predict(iData, predicted, numOfPredictors, radiusOffset, vectorOffset, imageMeta.w, imageMeta.h);
+		byte prediction = predict(iData, predicted, numOfPredictors, radiusOffset, vectorOffset, imageMeta.w, imageMeta.h);
+		pData[absolutePosition] = prediction;
+	}
+
+	__global__ void errorCorrect(	void* diData,
+									void* dpData,
+									void* doData,
+									void* deData,
+									void* dRadiusOffset,
+									void* dVectorOffset,
+									ImageWHSize imageMeta)
+	{
+		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
+		unsigned anchorX = absolutePosition % imageMeta.w;
+		unsigned anchorY = absolutePosition / imageMeta.w;
+		if(anchorX >= imageMeta.w || anchorY >= imageMeta.h){
+			return;
+		}
+		unsigned numOfSimilarPixels = 0;
+		PixelDistance similarPixels[M];
+		PixelDistance pixelDist;
+
+		byte* iData = (byte*) diData;
+		byte* pData = (byte*) dpData;
+		byte* oData = (byte*) doData;
+		short* eData = (short*) deData;
+		PixelOffset* radiusOffset = (PixelOffset*) dRadiusOffset;
+		PixelOffset* vectorOffset = (PixelOffset*) dVectorOffset;
+
+		for(int i = 0; i < R_A; ++i){
+			pixelDist.x = anchorX + radiusOffset[i].x;
+			pixelDist.y = anchorY + radiusOffset[i].y;
+			if(pixelDist.x < imageMeta.w && pixelDist.y < imageMeta.h){
+				pixelDist.distance = distance(iData, anchorX, anchorY, pixelDist.x, pixelDist.y, vectorOffset, imageMeta.w, imageMeta.h);
+				insert(pixelDist, similarPixels, &numOfSimilarPixels);
+			}
+		}
+		if(numOfSimilarPixels == 0){
+			oData[absolutePosition] = pData[absolutePosition];
+			eData[absolutePosition] = iData[absolutePosition] - pData[absolutePosition];
+		}
+
+		int errorSum = 0;
+		for(int i = 0; i < numOfSimilarPixels; ++i){
+			errorSum += pData[ similarPixels[i].x + similarPixels[i].y * imageMeta.w ] - iData[ similarPixels[i].x + similarPixels[i].y * imageMeta.w ];
+		}
+		int prediction = (int)pData[absolutePosition] + errorSum / (int)numOfSimilarPixels;
+		if(prediction < 0){
+			prediction = 0;
+		}else if(prediction > 255){
+			prediction = 255;
+		}
 		oData[absolutePosition] = prediction;
 		eData[absolutePosition] = iData[absolutePosition] - prediction;
 	}
@@ -169,11 +217,13 @@ PGMCBPCCUDA::PGMCBPCCUDA(	vector<PGMImage>& inputImages,
 	for(int i = 0; i < iData.size(); ++i){
 		cout<<"Static prediction "<<i+1<<"/"<<iData.size()<<endl;
 		diData.push_back(NULL);
+		dpData.push_back(NULL);
 		doData.push_back(NULL);
 		deData.push_back(NULL);
 		dPredicted.push_back(NULL);
 
 		CUDA_CHECK_RETURN(cudaMalloc(&diData[i], sizeof(byte) * imagesMeta[i].size));
+		CUDA_CHECK_RETURN(cudaMalloc(&dpData[i], sizeof(byte) * imagesMeta[i].size));
 		CUDA_CHECK_RETURN(cudaMalloc(&doData[i], sizeof(byte) * imagesMeta[i].size));
 		CUDA_CHECK_RETURN(cudaMalloc(&deData[i], sizeof(short) * imagesMeta[i].size));
 		CUDA_CHECK_RETURN(cudaMemcpy(diData[i], iData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyHostToDevice));
@@ -206,14 +256,22 @@ void PGMCBPCCUDA::predict(){
 	for(int i = 0; i < inputImages.size(); ++i){
 		cout<<"Prediction "<<i+1<<"/"<<inputImages.size()<<endl;
 		::predict<<<imagesMeta[i].size/THREADS + 1, THREADS>>>(		diData[i],
-																	doData[i],
-																	deData[i],
+																	dpData[i],
 																	dPredicted[i],
 																	predictors.size(),
 																	dRadiusOffset,
 																	dVectorOffset,
 																	imagesMeta[i]
 																);
+		::errorCorrect<<<imagesMeta[i].size/THREADS + 1, THREADS>>>(diData[i],
+																	dpData[i],
+																	doData[i],
+																	deData[i],
+																	dRadiusOffset,
+																	dVectorOffset,
+																	imagesMeta[i]
+																);
+
 		CUDA_CHECK_RETURN(cudaMemcpy(oData[i], doData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 		CUDA_CHECK_RETURN(cudaMemcpy(eData[i], deData[i], sizeof(short) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 
