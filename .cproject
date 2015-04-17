@@ -26,7 +26,7 @@
 								<option id="nvcc.compiler.pic.1882643081" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
 								<option id="nvcc.compiler.def.symbols.57114830" name="Defined symbols (-D)" superClass="nvcc.compiler.def.symbols"/>
 								<option id="nvcc.compiler.undef.symbol.1329483793" name="Undefined symbols (-U)" superClass="nvcc.compiler.undef.symbol"/>
-								<option id="nvcc.compiler.include.paths.1009953522" superClass="nvcc.compiler.include.paths" valueType="includePath">
+								<option id="nvcc.compiler.include.paths.1009953522" name="Include paths (-I)" superClass="nvcc.compiler.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/local/cuda-7.0/include"/>
 								</option>
 								<inputType id="nvcc.compiler.input.cu.221874341" superClass="nvcc.compiler.input.cu"/>
@@ -41,7 +41,7 @@
 							</tool>
 							<tool id="nvcc.archiver.base.1495336020" name="NVCC Archiver" superClass="nvcc.archiver.base"/>
 							<tool id="com.nvidia.host.assembler.1637265133" name="Host Assembler" superClass="com.nvidia.host.assembler">
-								<option id="gnu.both.asm.option.include.paths.1982517714" superClass="gnu.both.asm.option.include.paths" valueType="includePath"/>
+								<option id="gnu.both.asm.option.include.paths.1982517714" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.669774086" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
