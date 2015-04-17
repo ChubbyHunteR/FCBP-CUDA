@@ -4,8 +4,7 @@
 #include <string>
 #include <ctime>
 #include "PGMImage.h"
-#include "PGMAverage.h"
-#include "PGMCBPCCUDA.h"
+#include "PGMCBPDCUDA.h"
 #include "predictors/PredictorN.h"
 #include "predictors/PredictorNW.h"
 #include "predictors/PredictorGW.h"
@@ -58,8 +57,8 @@ int main(int argc, char* argv[]) {
 	predictors.push_back(new PredictorGN);
 	predictors.push_back(new PredictorPL);
 
-	PGMCBPCCUDA cbpc(inputImages, outputImages, errorImages, predictors);
-	cbpc.predict();
+	PGMCBPDCUDA cbpd(inputImages, outputImages, errorImages, predictors);
+	cbpd.predict();
 
 	return 0;
 }
