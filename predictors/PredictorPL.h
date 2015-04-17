@@ -4,7 +4,8 @@
 #include "Predictor.h"
 
 struct PredictorPL : public Predictor{
-	virtual void predict(void *diData, void *dPredicted, unsigned w, unsigned h);
+	virtual void cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h);
+	virtual byte predict(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
 };
 
 #endif /* PREDICTORPL_H_ */

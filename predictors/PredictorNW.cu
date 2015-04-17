@@ -1,7 +1,6 @@
 #include "PredictorNW.h"
 #include "../config.h"
 
-typedef unsigned char byte;
 namespace {
 
 	__device__ byte predict(byte *iData, unsigned w, unsigned h) {
@@ -27,7 +26,18 @@ namespace {
 	}
 }
 
-void PredictorNW::predict(void *diData, void *dPredicted, unsigned w, unsigned h){
+void PredictorNW::cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h){
 	unsigned size = w * h;
 	::predict<<<size/THREADS + 1, THREADS>>>(diData, dPredicted, w, h);
 }
+
+
+byte PredictorNW::predict(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h){
+	--x;
+	--y;
+	if(x < w && y < h){
+		return iData[y * w + x];
+	}
+	return 0;
+}
+

@@ -232,7 +232,7 @@ PGMCBPCCUDA::PGMCBPCCUDA(	vector<PGMImage>& inputImages,
 		vector<void*> hPredicted(predictors.size());
 		for(int j = 0; j < predictors.size(); ++j){
 			CUDA_CHECK_RETURN(cudaMalloc(&hPredicted[j], sizeof(byte) * imagesMeta[i].size));
-			predictors[j]->predict(diData[i], hPredicted[j], imagesMeta[i].w, imagesMeta[i].h);
+			predictors[j]->cudaPredictAll(diData[i], hPredicted[j], imagesMeta[i].w, imagesMeta[i].h);
 		}
 		CUDA_CHECK_RETURN(cudaMemcpy(dPredicted[i], hPredicted.data(), sizeof(void*) * predictors.size(), cudaMemcpyHostToDevice));
 		cout<<"DONE"<<endl;

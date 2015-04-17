@@ -1,29 +1,27 @@
 #include "PredictorGN.h"
 #include "../config.h"
 
-typedef unsigned char byte;
 namespace {
 
 	__device__ byte predict(byte *iData, unsigned w, unsigned h) {
 		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
-		unsigned x = absolutePosition % w - 2;
-		unsigned y = absolutePosition / w;
-		short sum = 0;
+		unsigned x = absolutePosition % w;
+		unsigned y = absolutePosition / w - 2;
+		int sum = 0;
 		if(x < w && y < h){
 			sum -= iData[y * w + x];
 		}
-		++x;
+		++y;
 		if(x < w && y < h){
 			sum += 2 * iData[y * w + x];
 		}
 
 		if(sum < 0){
-			return 0;
+			sum = 0;
 		}else if(sum > 255){
-			return 255;
-		}else{
-			return sum;
+			sum = 255;
 		}
+		return sum;
 	}
 
 	__global__ void predict(void *diData, void *dPredicted, unsigned w, unsigned h) {
@@ -39,7 +37,26 @@ namespace {
 	}
 }
 
-void PredictorGN::predict(void *diData, void *dPredicted, unsigned w, unsigned h){
+void PredictorGN::cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h){
 	unsigned size = w * h;
 	::predict<<<size/THREADS + 1, THREADS>>>(diData, dPredicted, w, h);
+}
+
+byte PredictorGN::predict(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h){
+	y -= 2;
+	int sum = 0;
+	if(x < w && y < h){
+		sum -= iData[x + y * w];
+	}
+	++y;
+	if(x < w && y < h){
+		sum += 2 * iData[x + y * w];
+	}
+
+	if(sum < 0){
+		sum = 0;
+	}else if(sum > 255){
+		sum = 255;
+	}
+	return sum;
 }

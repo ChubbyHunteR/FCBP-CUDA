@@ -1,7 +1,6 @@
 #include "PredictorPL.h"
 #include "../config.h"
 
-typedef unsigned char byte;
 namespace {
 
 	__device__ byte predict(byte *iData, unsigned w, unsigned h) {
@@ -16,18 +15,18 @@ namespace {
 		if(x < w && y < h){
 			sum += iData[y * w + x];
 		}
+		--x;
 		++y;
 		if(x < w && y < h){
 			sum += iData[y * w + x];
 		}
 
 		if(sum < 0){
-			return 0;
+			sum = 0;
 		}else if(sum > 255){
-			return 255;
-		}else{
-			return sum;
+			sum = 255;
 		}
+		return sum;
 	}
 
 	__global__ void predict(void *diData, void *dPredicted, unsigned w, unsigned h) {
@@ -43,7 +42,33 @@ namespace {
 	}
 }
 
-void PredictorPL::predict(void *diData, void *dPredicted, unsigned w, unsigned h){
+void PredictorPL::cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h){
 	unsigned size = w * h;
 	::predict<<<size/THREADS + 1, THREADS>>>(diData, dPredicted, w, h);
+}
+
+
+byte PredictorPL::predict(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h){
+	--x;
+	--y;
+	short sum = 0;
+	if(x < w && y < h){
+		sum -= iData[y * w + x];
+	}
+	++x;
+	if(x < w && y < h){
+		sum += iData[y * w + x];
+	}
+	--x;
+	++y;
+	if(x < w && y < h){
+		sum += iData[y * w + x];
+	}
+
+	if(sum < 0){
+		sum = 0;
+	}else if(sum > 255){
+		sum = 255;
+	}
+	return sum;
 }
