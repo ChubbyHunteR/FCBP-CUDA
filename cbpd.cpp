@@ -14,7 +14,7 @@
 #include "predictors/PredictorPL.h"
 #include "config.h"
 
-string usage = " inputImage.pgm...";
+string usage = " inputImageErrorFile...";
 
 void fail(string msg){
 	cerr<<msg<<endl;
