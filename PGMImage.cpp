@@ -1,248 +1,122 @@
-///////////////////////////////////////////////////////////////////////////
-// File Name    : PGMImage.cpp
-//
-// Purpose      : Implementation file for the PGMImage class
-//
-// Author       : Josip Knezovic (josip.knezovic@fer.hr)
-//
-//
-// Copyright 2005. Josip Knezovic
-//
-///////////////////////////////////////////////////////////////////////////
-
-#include "PGMImage.h"
-//#include "require.h"
-
 #include <cstring>
 #include <iostream>		
 #include <iomanip>
 #include <sstream>
 #include <cstdlib>
-
 using namespace std;
 
-///////////////////// construction & destruction ///////////////////////////
-////////////////////////////////////////////////////////////////////////////
-// Function: PGMImage(const char* imgName)
-// 
-// Purpose:	Constructor 
-//			Takes the image name as the argument and initializes the input file
-//			stream imgFile with this name this constructor is used to create 
-//          the object that reads the pgm image file (for input)
-/////////////////////////////////////////////////////////////////////////////
-PGMImage::PGMImage(const char* imgName)
- : modM(ios::in), imgFileM( new fstream(imgName, ios::in | ios::binary) ), imgNameM(imgName), heightM(0), pixelMaxM(0), widthM(0)
-{	
-	// this part simply checks if magic number is included in the file
-	// it doesn't check all possible errors in file format
-	//char tmp[5];
-	if(imgFileM->fail()){
-		cerr<<"Opening of input file "<<imgNameM<<" failed."<<endl;
+#include "PGMImage.h"
+
+PGMImage::PGMImage(const char* imgName) :
+		mode(ios::in), imgFile( new fstream(imgName, ios::in | ios::binary) ), imgName(imgName),
+		height(0), pixelMax(0), width(0)
+{
+	if(imgFile->fail()){
+		cerr<<"Opening of input file "<<imgName<<" failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 	string tmp;
-	*imgFileM >> tmp;
+	*imgFile >> tmp;
 	string magicNum(tmp);
 	if (magicNum != "P5") {
         std::cerr << "Wrong file format " << imgName << endl;
 		exit(EXIT_FAILURE);
 	}
 
-  string line;
-  string comment("#");
- 
-  //Provjera postoji li linija koja zapocinje s #
-  //Ocekuje se komentar u drugoj liniji
-  *imgFileM >> line;
-  while(!isdigit(line[0]))
-    *imgFileM >> line;
-    
-    
-  istringstream stream(line);
-  stream>> widthM; 
-  
-	// we presume that there's no lines starting with '#' in header
-	// read image width, height, and maxPixelValue
-	*imgFileM >> heightM >> pixelMaxM;
-	
-	// ignores next char (whitespace)
-	imgFileM->ignore();
-		
-	// buffer pixels into imgBufferM
-	imgBufferM = new byte[widthM * heightM];
-	imgFileM->read((char*)imgBufferM, widthM * heightM);
+	string line;
+	*imgFile >> line;
+	while(!isdigit(line[0])){
+		*imgFile >> line;
+	}
+
+	istringstream stream(line);
+	stream>> width;
+	*imgFile >> height >> pixelMax;
+	imgFile->ignore();
+
+	imgBuffer = new byte[width * height];
+	imgFile->read((char*)imgBuffer, width * height);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Function:	PGMImage(const char*, int width, int height, unsigned pixelMax)
-//
-// Purpose:		Initializes the PGMImage for output into file. It sets the
-//				image width, height, and maximum possible pixel value, allocates
-//				the pixel buffer and writes the header into output pgm file.
-////////////////////////////////////////////////////////////////////////////////
-PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, byte pixelMax)
- : modM(ios::out), imgFileM( new fstream(imgName, ios::binary | ios::out) ),
-   widthM(width), heightM(height), pixelMaxM(pixelMax)
+PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, byte pixelMax) :
+		mode(ios::out), imgFile( new fstream(imgName, ios::binary | ios::out) ), imgName(imgName),
+		width(width), height(height), pixelMax(pixelMax)
 {        
-	if(imgFileM->fail()){
+	if(imgFile->fail()){
 		cerr<<"Opening of output file failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 
-    imgBufferM = new unsigned char[widthM * heightM];
+    imgBuffer = new byte[width * height];
             
-    *imgFileM << "P5\n" << widthM << " " << heightM << "\n"
-               << pixelMaxM << endl;
-    
+    *imgFile << "P5\n" << width << " " << height << "\n" << (unsigned)pixelMax << endl;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Function:	PGMImage(PGMImage&& other)
-//
-// Purpose:		Moves the PGMImage to a new object.
-////////////////////////////////////////////////////////////////////////////////
-PGMImage::PGMImage(PGMImage&& other)
- : widthM(other.widthM), heightM(other.heightM), pixelMaxM(other.getPixelMax()), modM(other.modM),
-   imgFileM(other.imgFileM), imgNameM(other.imgNameM), imgBufferM(other.imgBufferM)
+PGMImage::PGMImage(PGMImage&& other) :
+		mode(other.mode), imgFile(other.imgFile), imgName(other.imgName),
+		width(other.width), height(other.height), pixelMax(other.pixelMax),
+		imgBuffer(other.imgBuffer)
 {
-	other.imgBufferM = nullptr;
-	other.imgFileM = nullptr;
-
+	other.imgFile = nullptr;
+	other.imgBuffer = nullptr;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Function:	~PGMImage()
-//
-// Purpose:		Destructor
-///////////////////////////////////////////////////////////////////////////////
 PGMImage::~PGMImage() {
-	if(imgBufferM == nullptr){
+	if(imgBuffer == nullptr){
 		return;
 	}
 
-    if (modM != ios::in) {
-        // if out mode we need to flush the pixel buffer into file 
-        imgFileM->write( ((char*)(imgBufferM)), widthM * heightM);
+    if (mode != ios::in) {
+        imgFile->write( ((char*)(imgBuffer)), width * height);
     }
-    // free the allocated buffer
-    delete[] imgBufferM;
-    delete imgFileM;
-}
-////////////////// ! construction & destruction ////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////
-// Function: getPixel(int ppos)
-// Purpose:  Returns the pixel at the (xPos, yPos) coords. in the pixel array.
-//////////////////////////////////////////////////////////////////////////////
-byte PGMImage::getPixel(unsigned xPos, unsigned yPos) {
-    // check boundaries
-    if(xPos >= widthM || yPos >= heightM) {
-        cerr << "ERROR: reading PGMImage\n"
-             << " xPos = " << xPos << " yPos = " << yPos
-             << " width = " << widthM << " height = " << heightM << endl;
-        exit(EXIT_FAILURE);
-    }
-    
-    return imgBufferM[yPos * widthM + xPos]; 
+    delete imgFile;
+    delete[] imgBuffer;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// Function: getPixel(int pPos)
-// Purpose: Returns the pixel at the pPos in the pixel array when the image 
-//          is viewed as an array in raster scan order
-//////////////////////////////////////////////////////////////////////////////
-byte PGMImage::getPixel(unsigned pPos) {
-    if((pPos >= widthM * heightM) || (pPos < 0)) {
-        cerr << "ERROR: reading PGMImage\n"
-             << " pPos = " << pPos << " out of range!" << endl;
-        exit(EXIT_FAILURE);
+byte PGMImage::getPixel(unsigned x, unsigned y) {
+    if(x < width && y < height) {
+        return imgBuffer[x + y * width];
     }
-    return imgBufferM[pPos];
+    return 0;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// Function: getBuffer()
-// Purpose: Returns the pixel buffer
-//////////////////////////////////////////////////////////////////////////////
+byte PGMImage::getPixel(unsigned p) {
+    if(p < width * height) {
+    	return imgBuffer[p];
+    }
+    return 0;
+}
+
 byte* PGMImage::getBuffer() {
-    return imgBufferM;
+    return imgBuffer;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Function: readIntoArray(unsigned* buff, int xPos, int yPos, int size)
-// Purpose:  Reads the pixels from (xPos, yPos) to (xPos + size, yPos) into
-//           the array buff of size size
-//////////////////////////////////////////////////////////////////////////////
-void PGMImage::readIntoArray(byte* buff, unsigned xPos, unsigned yPos, unsigned size) {
-	// no boundary guards for now
-	for (int i = 0; i < size; i++) {
-		buff[i] = getPixel(xPos++, yPos);
+void PGMImage::writePixel(unsigned x, unsigned y, byte pixel) {
+	if(mode != ios::out) {
+    	return;
+    }
+    if(x < width && y < height){
+    	imgBuffer[x + y * width] = pixel;
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Function: readIntoArray(unsigned* buff, int xPos, int size)
-// Purpose:  Reads the pixels from xPos to xPos + size into
-//           the array buff of size size
-//////////////////////////////////////////////////////////////////////////////
-void PGMImage::readIntoArray(byte* buff, unsigned xPos, unsigned size) {
-	// no boundary guards for now
-	for (int i = 0; i < size; i++) {
-		buff[i] = getPixel(xPos++);
-    }
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Function: writePixel(int, int, unsigned)
-// Purpose:  
-//////////////////////////////////////////////////////////////////////////////
-void PGMImage::writePixel(unsigned xPos, unsigned yPos, byte pixel) {
-    if(modM != ios::out) {
-        cerr << "ERROR: PGMImage::writePixel()\n"
-             << " modM != ios::out " << endl;
-        exit(EXIT_FAILURE);
-    }
-    
-    // if coordinates exceed the image width or height - report error
-    if ((xPos >= widthM) || (yPos >= heightM)) {
-        cerr << "ERROR: reading PGMImage\n"
-             << " xPos = " << xPos << " yPos = " << yPos
-             << " width = " << widthM << " height = " << heightM << endl;     
-        exit(EXIT_FAILURE);
-        
-    } else {        
-        // buffer the pixel in the buffer array
-        imgBufferM[yPos * widthM + xPos] = static_cast<unsigned char>(pixel);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Function: imageToText()
-// 
-// Purpose:  Prints the image into the text file every pixel is printed in readable
-// format. It is used for debugging.
-//////////////////////////////////////////////////////////////////////////////////
 void PGMImage::imageToText() {
-	char txtImageName[50];
-	std::strcpy(txtImageName, imgNameM.c_str());
-	std::strcat(txtImageName, ".txt");
+	string txtImageName(imgName);
+	txtImageName += ".txt";
 
-    // create output file stream for text output
-	ofstream txtImageFile(txtImageName);
+	ofstream txtImageFile(txtImageName.data());
 	
-	txtImageFile << " image name: " << imgNameM << endl;
-	txtImageFile << " width: " << widthM << endl;
-	txtImageFile << " height: " << heightM << endl;
-	txtImageFile << " PIXELS " << endl;
-	txtImageFile << " ---------------------------------------- " << endl;
-	
-    // print pixels into output text file
-	for (int yPos = 0; yPos < getHeight(); yPos++) {
-		for (int xPos = 0; xPos < getWidth(); xPos++) {
-            txtImageFile << std::setw(5) << getPixel(xPos, yPos);
+	txtImageFile << "Image name: " << imgName << endl;
+	txtImageFile << "Width: " << width << endl;
+	txtImageFile << "Height: " << height << endl;
+	txtImageFile << "PIXELS" << endl;
+	txtImageFile << "----------------------------------------" << endl;
+
+	for(unsigned y = 0; y < height; ++y) {
+		for(unsigned x = 0; x < width; ++x) {
+			txtImageFile << std::setw(5) << imgBuffer[x + y * width];
 		}
-
 		txtImageFile << endl;
 	}
 }

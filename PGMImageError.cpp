@@ -23,7 +23,7 @@ PGMImageError::PGMImageError(const char* imgName) :
 	imgFile->read((char*)imgBuffer, width * height * sizeof(short));
 }
 
-PGMImageError::PGMImageError(const char* imgName, unsigned width, unsigned height, unsigned pixelMax) :
+PGMImageError::PGMImageError(const char* imgName, unsigned width, unsigned height, short pixelMax) :
 		mode(ios::out), imgFile( new fstream(imgName, ios::binary | ios::out) ),
 		width(width), height(height), pixelMax(pixelMax), imgName(imgName)
 {
@@ -34,7 +34,7 @@ PGMImageError::PGMImageError(const char* imgName, unsigned width, unsigned heigh
 
     imgBuffer = new short[width * height];
             
-    *imgFile << width << height << pixelMax;
+    *imgFile << width << height << (int)pixelMax;
     
 }
 
