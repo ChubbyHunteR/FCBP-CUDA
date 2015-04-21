@@ -7,8 +7,8 @@ CFLAGS_DEBUG = -g -G -std=c++11 -DDEBUG
 # COMMON OBJECTS #
 ##################
 
-COMMON_OBJECTS = PredictorN.o PredictorNW.o PredictorGW.o PredictorW.o PredictorNE.o PredictorGN.o PredictorPL.o PGMImage.o PGMErrorImage.o
-COMMON_OBJECTS_DEBUG = PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_d.o PredictorNE_d.o PredictorGN_d.o PredictorPL_d.o PGMImage_d.o PGMErrorImage_d.o 
+COMMON_OBJECTS = PredictorN.o PredictorNW.o PredictorGW.o PredictorW.o PredictorNE.o PredictorGN.o PredictorPL.o PGMImage.o PGMImageError.o
+COMMON_OBJECTS_DEBUG = PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_d.o PredictorNE_d.o PredictorGN_d.o PredictorPL_d.o PGMImage_d.o PGMImageError_d.o 
 
 
 #################
@@ -59,8 +59,8 @@ PredictorPL.o: predictors/PredictorPL.cu predictors/PredictorPL.h
 PGMImage.o: PGMImage.cpp PGMImage.h
 	$(CC) -c -o PGMImage.o $(CFLAGS) PGMImage.cpp
 
-PGMErrorImage.o: PGMErrorImage.cpp PGMErrorImage.h
-	$(CC) -c -o PGMErrorImage.o $(CFLAGS) PGMErrorImage.cpp
+PGMImageError.o: PGMImageError.cpp PGMImageError.h
+	$(CC) -c -o PGMImageError.o $(CFLAGS) PGMImageError.cpp
 
 
 ################
@@ -93,8 +93,8 @@ PredictorPL_d.o: predictors/PredictorPL.cu predictors/PredictorPL.h
 PGMImage_d.o: PGMImage.cpp PGMImage.h
 	$(CC) -c -o PGMImage_d.o $(CFLAGS_DEBUG) PGMImage.cpp
 
-PGMErrorImage_d.o: PGMErrorImage.cpp PGMErrorImage.h
-	$(CC) -c -o PGMErrorImage_d.o $(CFLAGS_DEBUG) PGMErrorImage.cpp
+PGMImageError_d.o: PGMImageError.cpp PGMImageError.h
+	$(CC) -c -o PGMImageError_d.o $(CFLAGS_DEBUG) PGMImageError.cpp
 
 
 #################
