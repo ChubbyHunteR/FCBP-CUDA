@@ -55,6 +55,7 @@ PGMImageError::~PGMImageError() {
         imgFile->write((char*)imgBuffer, width * height * sizeof(short));
     }
 
+    delete imgFile;
     delete[] imgBuffer;
 }
 
