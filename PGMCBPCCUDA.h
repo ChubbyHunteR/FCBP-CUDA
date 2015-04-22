@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "PGMImage.h"
+#include "PGMImageerror.h"
 #include "predictors/Predictor.h"
 #include "config.h"
 #include "util.h"
@@ -18,7 +19,7 @@
 struct PGMCBPCCUDA{
 	PGMCBPCCUDA(vector<PGMImage>& inputImages,
 				vector<PGMImage>& outputImages,
-				vector<PGMImage>& errorImages,
+				vector<PGMImageError>& errorImages,
 				vector<Predictor*>& predictors
 				);
 	~PGMCBPCCUDA();
@@ -29,7 +30,7 @@ struct PGMCBPCCUDA{
 private:
 	vector<PGMImage>& inputImages;
 	vector<PGMImage>& outputImages;
-	vector<PGMImage>& errorImages;
+	vector<PGMImageError>& errorImages;
 	vector<Predictor*>& predictors;
 
 	vector<ImageWHSize> imagesMeta;

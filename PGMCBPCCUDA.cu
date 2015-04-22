@@ -186,7 +186,7 @@ namespace {
 
 PGMCBPCCUDA::PGMCBPCCUDA(	vector<PGMImage>& inputImages,
 							vector<PGMImage>& outputImages,
-							vector<PGMImage>& errorImages,
+							vector<PGMImageError>& errorImages,
 							vector<Predictor*>& predictors
 						):
 		inputImages(inputImages),
@@ -274,16 +274,6 @@ void PGMCBPCCUDA::predict(){
 
 		CUDA_CHECK_RETURN(cudaMemcpy(oData[i], doData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 		CUDA_CHECK_RETURN(cudaMemcpy(eData[i], deData[i], sizeof(short) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
-
-		for(unsigned k = 0; k < imagesMeta[i].h; ++k){
-			for(unsigned j = 0; j < imagesMeta[i].w; ++j){
-				short error = eData[i][j + k*imagesMeta[i].w];
-				if(error < 0){
-					error = -error;
-				}
-				errorImages[i].writePixel(j, k, error);
-			}
-		}
 		cout<<"DONE"<<endl;
 	}
 }
