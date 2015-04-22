@@ -4,6 +4,7 @@
 #include <string>
 #include <ctime>
 #include "PGMImage.h"
+#include "PGMImageError.h"
 #include "PGMCBPDCUDA.h"
 #include "predictors/PredictorN.h"
 #include "predictors/PredictorNW.h"
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]) {
 
 	vector<PGMImage> inputImages;
 	vector<PGMImage> outputImages;
-	vector<PGMImage> errorImages;
+	vector<PGMImageError> errorImages;
 	for(int i = 1; i < argc; ++i){
 		string inputName = argv[i];
 		size_t dot = inputName.find_last_of('.');
