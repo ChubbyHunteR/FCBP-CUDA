@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "PGMImage.h"
-#include "PGMImageerror.h"
+#include "PGMImageError.h"
 #include "predictors/Predictor.h"
 #include "config.h"
 #include "util.h"
