@@ -201,8 +201,8 @@ PGMCBPCCUDA::PGMCBPCCUDA(	vector<PGMImage>& inputImages,
 	for(auto& outputImage : outputImages){
 		oData.push_back(outputImage.getBuffer());
 	}
-	for(auto& imageMeta : imagesMeta){
-		eData.push_back(new short[imageMeta.size]);
+	for(auto& errorImage : errorImages){
+		eData.push_back(errorImage.getBuffer());
 	}
 
 	for(int i = 0; i < R_A; ++i){
@@ -247,9 +247,6 @@ PGMCBPCCUDA::PGMCBPCCUDA(	vector<PGMImage>& inputImages,
 
 PGMCBPCCUDA::~PGMCBPCCUDA(){
 	CUDA_CHECK_RETURN(cudaDeviceReset());
-	for(auto p : eData){
-		delete[] p;
-	}
 }
 
 void PGMCBPCCUDA::predict(){
