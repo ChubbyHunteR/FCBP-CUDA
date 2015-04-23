@@ -4,7 +4,7 @@
 #include <vector>
 #include "PGMImage.h"
 #include "PGMImageError.h"
-#include "predictors/Predictor.h"
+#include "coderPredictors/Predictor.h"
 #include "config.h"
 #include "util.h"
 
@@ -17,35 +17,33 @@
 }
 
 struct PGMCBPDCUDA{
-	PGMCBPDCUDA(vector<PGMImage>& inputImages,
+	PGMCBPDCUDA(vector<PGMImageError>& inputImagesError,
 				vector<PGMImage>& outputImages,
-				vector<PGMImageError>& errorImages,
+				vector<PGMImage>& predictionImages,
 				vector<Predictor*>& predictors
 				);
 	~PGMCBPDCUDA();
 
-	void predict();
-	bool getStaticPrediction(unsigned i);
+	void decode();
 
 private:
-	vector<PGMImage>& inputImages;
+	vector<PGMImageError>& inputImagesError;
 	vector<PGMImage>& outputImages;
-	vector<PGMImageError>& errorImages;
+	vector<PGMImage>& predictionImages;
 	vector<Predictor*>& predictors;
 
+	vector<cudaStream_t> streams;
 	vector<ImageWHSize> imagesMeta;
-	vector<byte*> iData;
+	vector<short*> iData;
 	vector<byte*> oData;
-	vector<short*> eData;
+	vector<byte*> pData;
 
 	PixelOffset radiusOffset[R_A];
 	PixelOffset vectorOffset[D];
 
 	vector<void*> diData;
-	vector<void*> dpData;
 	vector<void*> doData;
-	vector<void*> deData;
-	vector<void**> dPredicted;
+	vector<void*> dpData;
 	void* dRadiusOffset;
 	void* dVectorOffset;
 };
