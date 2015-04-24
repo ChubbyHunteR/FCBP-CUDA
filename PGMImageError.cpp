@@ -18,6 +18,7 @@ PGMImageError::PGMImageError(const char* imgName) :
 	}
 
 	*imgFile >> width >> height >> pixelMax;
+	imgFile->ignore();
 
 	imgBuffer = new short[width * height];
 	imgFile->read((char*)imgBuffer, width * height * sizeof(short));
