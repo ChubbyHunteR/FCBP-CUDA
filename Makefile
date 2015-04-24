@@ -33,7 +33,7 @@ DECODER_OBJECTS_DEBUG = PGMCBPDCUDA_d.o cbpd_d.o
 # COMMON RELEASE #
 ##################
 
-all: $(CODER) $(DECODER)
+all: $(CODER) $(DECODER) $(CODER_TEST)
 
 PGMImage.o: PGMImage.cpp PGMImage.h
 	$(CC) -c -o PGMImage.o $(CFLAGS) PGMImage.cpp
@@ -153,6 +153,16 @@ cbpd_d.o: cbpd.cpp config.h
 	$(CC) -c -o cbpd_d.o $(CFLAGS_DEBUG) cbpd.cpp
 
 
+################
+# CODER TESTER #
+################
+
+tester: coderTester.cpp PGMImage.o PGMImageError.o
+	$(CC) -o ct -O3 -std=c++11 coderTester.cpp PGMImage.o PGMImageError.o
+
+tester_d: coderTester.cpp PGMImage_d.o PGMImageError_d.o
+	$(CC) -o ct_d -g -G -std=c++11 coderTester.cpp PGMImage_d.o PGMImageError_d.o
+
 
 clean:
-	-rm -f $(CODER) $(CODER_DEBUG) $(DECODER) $(DECODER_DEBUG) *.o
+	-rm -f $(CODER) $(CODER_DEBUG) $(DECODER) $(DECODER_DEBUG) *.o ct ct_d
