@@ -59,8 +59,7 @@ int main(int argc, char* argv[]) {
 	predictors.push_back(new PredictorPL);
 
 	PGMCBPCCUDA cbpc(inputImages, outputImages, errorImages, predictors);
-	//cbpc.predict();
-	cbpc.getStaticPrediction(0);
+	cbpc.predict();
 
 	return 0;
 }
