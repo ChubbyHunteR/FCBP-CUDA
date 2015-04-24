@@ -10,7 +10,7 @@ public:
 	// Read constructor
 	PGMImageError(const char* imgName);
 	// Write constructor
-	PGMImageError(const char* imgName, unsigned width, unsigned height, short pixelMax);
+	PGMImageError(const char* imgName, unsigned width, unsigned height, unsigned pixelMax);
 	// Copy constructor
 	PGMImageError(PGMImageError&& other);
 
@@ -19,7 +19,7 @@ public:
 	unsigned getWidth() { return width; }
 	unsigned getHeight() { return height; }
 	unsigned getSize() { return width * height;}
-	short getPixelMax() { return pixelMax; }
+	unsigned getPixelMax() { return pixelMax; }
     string getName() { return imgName; }
 
     short getPixel(unsigned x, unsigned y);
@@ -35,7 +35,7 @@ protected:
 
 	unsigned width;
 	unsigned height;
-	short pixelMax;
+	unsigned pixelMax;
 
 	short* imgBuffer;
 };
