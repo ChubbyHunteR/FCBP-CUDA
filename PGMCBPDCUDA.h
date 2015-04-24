@@ -4,9 +4,9 @@
 #include <vector>
 #include "PGMImage.h"
 #include "PGMImageError.h"
-#include "coderPredictors/Predictor.h"
 #include "config.h"
 #include "util.h"
+#include <cuda_runtime.h>
 
 #define CUDA_CHECK_RETURN(value) {																						\
 	cudaError_t _m_cudaStat = value;																					\
@@ -19,8 +19,7 @@
 struct PGMCBPDCUDA{
 	PGMCBPDCUDA(vector<PGMImageError>& inputImagesError,
 				vector<PGMImage>& outputImages,
-				vector<PGMImage>& predictionImages,
-				vector<Predictor*>& predictors
+				vector<PGMImage>& predictionImages
 				);
 	~PGMCBPDCUDA();
 
@@ -30,7 +29,6 @@ private:
 	vector<PGMImageError>& inputImagesError;
 	vector<PGMImage>& outputImages;
 	vector<PGMImage>& predictionImages;
-	vector<Predictor*>& predictors;
 
 	vector<cudaStream_t> streams;
 	vector<ImageWHSize> imagesMeta;

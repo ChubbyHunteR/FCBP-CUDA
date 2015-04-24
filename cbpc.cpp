@@ -6,13 +6,13 @@
 #include "PGMImage.h"
 #include "PGMImageError.h"
 #include "PGMCBPCCUDA.h"
-#include "predictors/PredictorN.h"
-#include "predictors/PredictorNW.h"
-#include "predictors/PredictorGW.h"
-#include "predictors/PredictorW.h"
-#include "predictors/PredictorNE.h"
-#include "predictors/PredictorGN.h"
-#include "predictors/PredictorPL.h"
+#include "coderPredictors/PredictorN.h"
+#include "coderPredictors/PredictorNW.h"
+#include "coderPredictors/PredictorGW.h"
+#include "coderPredictors/PredictorW.h"
+#include "coderPredictors/PredictorNE.h"
+#include "coderPredictors/PredictorGN.h"
+#include "coderPredictors/PredictorPL.h"
 #include "config.h"
 
 string usage = " inputImage.pgm...";
@@ -59,7 +59,8 @@ int main(int argc, char* argv[]) {
 	predictors.push_back(new PredictorPL);
 
 	PGMCBPCCUDA cbpc(inputImages, outputImages, errorImages, predictors);
-	cbpc.predict();
+	//cbpc.predict();
+	cbpc.getStaticPrediction(0);
 
 	return 0;
 }

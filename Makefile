@@ -1,6 +1,6 @@
 CC = nvcc
-CFLAGS = -O3 -std=c++11
-CFLAGS_DEBUG = -g -G -std=c++11 -DDEBUG
+CFLAGS = -O3 -std=c++11 -code sm_50 -arch compute_50
+CFLAGS_DEBUG = -g -G -std=c++11 -code sm_50 -arch compute_50 -DDEBUG
 
 
 ##################
@@ -133,10 +133,10 @@ $(DECODER): $(COMMON_OBJECTS) $(DECODER_OBJECTS)
 	$(CC) -o $(DECODER) $(CFLAGS) $(COMMON_OBJECTS) $(DECODER_OBJECTS)
 	
 predictors.o: decoderPredictors/predictors.cu decoderPredictors/predictors.h
-	$(CC) -c -o predictors.o $(CFLAGS) predictors.cu
+	$(CC) -dc -o predictors.o $(CFLAGS) decoderPredictors/predictors.cu
 
 PGMCBPDCUDA.o: PGMCBPDCUDA.cu PGMCBPDCUDA.h config.h util.h
-	$(CC) -c -o PGMCBPDCUDA.o $(CFLAGS) PGMCBPDCUDA.cu
+	$(CC) -dc -o PGMCBPDCUDA.o $(CFLAGS) PGMCBPDCUDA.cu
 
 cbpd.o: cbpd.cpp config.h
 	$(CC) -c -o cbpd.o $(CFLAGS) cbpd.cpp
@@ -150,10 +150,10 @@ $(DECODER_DEBUG): $(COMMON_OBJECTS_DEBUG) $(DECODER_OBJECTS_DEBUG)
 	$(CC) -o $(DECODER_DEBUG) $(CFLAGS_DEBUG) $(COMMON_OBJECTS_DEBUG) $(DECODER_OBJECTS_DEBUG)
 	
 predictors_d.o: decoderPredictors/predictors.cu decoderPredictors/predictors.h
-	$(CC) -c -o predictors_d.o $(CFLAGS) predictors.cu
+	$(CC) -dc -o predictors_d.o $(CFLAGS) decoderPredictors/predictors.cu
 
 PGMCBPDCUDA_d.o: PGMCBPDCUDA.cu PGMCBPDCUDA.h config.h util.h
-	$(CC) -c -o PGMCBPDCUDA_d.o $(CFLAGS_DEBUG) PGMCBPDCUDA.cu
+	$(CC) -dc -o PGMCBPDCUDA_d.o $(CFLAGS_DEBUG) PGMCBPDCUDA.cu
 
 cbpd_d.o: cbpd.cpp config.h
 	$(CC) -c -o cbpd_d.o $(CFLAGS_DEBUG) cbpd.cpp

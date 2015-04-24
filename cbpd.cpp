@@ -6,13 +6,6 @@
 #include "PGMImage.h"
 #include "PGMImageError.h"
 #include "PGMCBPDCUDA.h"
-#include "predictors/PredictorN.h"
-#include "predictors/PredictorNW.h"
-#include "predictors/PredictorGW.h"
-#include "predictors/PredictorW.h"
-#include "predictors/PredictorNE.h"
-#include "predictors/PredictorGN.h"
-#include "predictors/PredictorPL.h"
 #include "config.h"
 
 string usage = " inputImageErrorFile...";
@@ -49,17 +42,8 @@ int main(int argc, char* argv[]) {
 		predictionImages.emplace_back(predictionName.c_str(), w, h, maxPixel);
 	}
 
-	vector<Predictor*> predictors;
-	predictors.push_back(new PredictorN);
-	predictors.push_back(new PredictorNW);
-	predictors.push_back(new PredictorGW);
-	predictors.push_back(new PredictorW);
-	predictors.push_back(new PredictorNE);
-	predictors.push_back(new PredictorGN);
-	predictors.push_back(new PredictorPL);
-
-	PGMCBPDCUDA cbpd(inputImagesError, outputImages, predictionImages, predictors);
-	cbpd.predict();
+	PGMCBPDCUDA cbpd(inputImagesError, outputImages, predictionImages);
+	cbpd.decode();
 
 	return 0;
 }

@@ -30,14 +30,3 @@ void PredictorNW::cudaPredictAll(void *diData, void *dPredicted, unsigned w, uns
 	unsigned size = w * h;
 	::predict<<<size/THREADS + 1, THREADS>>>(diData, dPredicted, w, h);
 }
-
-
-byte PredictorNW::predict(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h){
-	--x;
-	--y;
-	if(x < w && y < h){
-		return iData[y * w + x];
-	}
-	return 0;
-}
-

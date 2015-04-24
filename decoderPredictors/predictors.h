@@ -3,13 +3,13 @@
 
 typedef unsigned char byte;
 
-__device__ byte predictGN(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
-__device__ byte predictGW(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
-__device__ byte predictN(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
-__device__ byte predictNE(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
-__device__ byte predictNW(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
-__device__ byte predictPL(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
-__device__ byte predictW(byte *iData, unsigned x, unsigned y, unsigned w, unsigned h);
+__device__ byte predictGN(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h);
+__device__ byte predictGW(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h);
+__device__ byte predictN(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h);
+__device__ byte predictNE(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h);
+__device__ byte predictNW(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h);
+__device__ byte predictPL(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h);
+__device__ byte predictW(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h);
 
 extern __device__ unsigned numOfPredictors;
 
