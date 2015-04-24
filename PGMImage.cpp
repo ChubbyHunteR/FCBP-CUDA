@@ -38,7 +38,7 @@ PGMImage::PGMImage(const char* imgName) :
 	imgFile->read((char*)imgBuffer, width * height);
 }
 
-PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, byte pixelMax) :
+PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, unsigned pixelMax) :
 		mode(ios::out), imgFile( new fstream(imgName, ios::binary | ios::out) ), imgName(imgName),
 		width(width), height(height), pixelMax(pixelMax)
 {        
@@ -49,7 +49,7 @@ PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, byte pi
 
     imgBuffer = new byte[width * height];
             
-    *imgFile << "P5\n" << width << " " << height << "\n" << (unsigned)pixelMax << endl;
+    *imgFile << "P5\n" << width << " " << height << "\n" << pixelMax << endl;
 }
 
 PGMImage::PGMImage(PGMImage&& other) :
