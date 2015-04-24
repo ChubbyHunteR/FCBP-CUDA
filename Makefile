@@ -25,8 +25,8 @@ CODER_OBJECTS_DEBUG = PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_
 ###################
 DECODER = cbpd
 DECODER_DEBUG = cbpd_d
-DECODER_OBJECTS = predictors.o PGMCBPDCUDA.o cbpd.o
-DECODER_OBJECTS_DEBUG = predictors_d.o PGMCBPDCUDA_d.o cbpd_d.o
+DECODER_OBJECTS = PGMCBPDCUDA.o cbpd.o
+DECODER_OBJECTS_DEBUG = PGMCBPDCUDA_d.o cbpd_d.o
 
 
 ##################
@@ -131,12 +131,9 @@ cbpc_d.o: cbpc.cpp config.h
 
 $(DECODER): $(COMMON_OBJECTS) $(DECODER_OBJECTS)
 	$(CC) -o $(DECODER) $(CFLAGS) $(COMMON_OBJECTS) $(DECODER_OBJECTS)
-	
-predictors.o: decoderPredictors/predictors.cu decoderPredictors/predictors.h
-	$(CC) -dc -o predictors.o $(CFLAGS) decoderPredictors/predictors.cu
 
 PGMCBPDCUDA.o: PGMCBPDCUDA.cu PGMCBPDCUDA.h config.h util.h
-	$(CC) -dc -o PGMCBPDCUDA.o $(CFLAGS) PGMCBPDCUDA.cu
+	$(CC) -c -o PGMCBPDCUDA.o $(CFLAGS) PGMCBPDCUDA.cu
 
 cbpd.o: cbpd.cpp config.h
 	$(CC) -c -o cbpd.o $(CFLAGS) cbpd.cpp
@@ -148,12 +145,9 @@ cbpd.o: cbpd.cpp config.h
 
 $(DECODER_DEBUG): $(COMMON_OBJECTS_DEBUG) $(DECODER_OBJECTS_DEBUG)
 	$(CC) -o $(DECODER_DEBUG) $(CFLAGS_DEBUG) $(COMMON_OBJECTS_DEBUG) $(DECODER_OBJECTS_DEBUG)
-	
-predictors_d.o: decoderPredictors/predictors.cu decoderPredictors/predictors.h
-	$(CC) -dc -o predictors_d.o $(CFLAGS) decoderPredictors/predictors.cu
 
 PGMCBPDCUDA_d.o: PGMCBPDCUDA.cu PGMCBPDCUDA.h config.h util.h
-	$(CC) -dc -o PGMCBPDCUDA_d.o $(CFLAGS_DEBUG) PGMCBPDCUDA.cu
+	$(CC) -c -o PGMCBPDCUDA_d.o $(CFLAGS_DEBUG) PGMCBPDCUDA.cu
 
 cbpd_d.o: cbpd.cpp config.h
 	$(CC) -c -o cbpd_d.o $(CFLAGS_DEBUG) cbpd.cpp

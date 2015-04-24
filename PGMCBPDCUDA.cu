@@ -1,6 +1,5 @@
 #include <iostream>
 #include "PGMCBPDCUDA.h"
-#include "decoderPredictors/predictors.h"
 
 #define SWAP(a, b) (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b)))
 
@@ -11,6 +10,117 @@ struct PixelDistance{
 };
 
 namespace {
+	__device__ unsigned numOfPredictors = 7;
+
+	__device__ byte predictGN(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
+		y -= 2;
+		int sum = 0;
+		if(x < w && y < h){
+			sum -= oData[y * w + x];
+		}
+		++y;
+		if(x < w && y < h){
+			sum += 2 * oData[y * w + x];
+		}
+
+		if(sum < 0){
+			sum = 0;
+		}else if(sum > 255){
+			sum = 255;
+		}
+		return sum;
+	}
+
+	__device__ byte predictGW(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
+		x -= 2;
+		int sum = 0;
+		if(x < w && y < h){
+			sum -= oData[y * w + x];
+		}
+		++x;
+		if(x < w && y < h){
+			sum += 2 * oData[y * w + x];
+		}
+
+		if(sum < 0){
+			sum = 0;
+		}else if(sum > 255){
+			sum = 255;
+		}
+		return sum;
+	}
+
+	__device__ byte predictN(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
+		--y;
+		if(x < w && y < h){
+			return oData[y * w + x];
+		}
+		return 0;
+	}
+
+	__device__ byte predictNE(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
+		++x;
+		--y;
+		if(x < w && y < h){
+			return oData[y * w + x];
+		}
+		return 0;
+	}
+
+	__device__ byte predictNW(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
+		--x;
+		--y;
+		if(x < w && y < h){
+			return oData[y * w + x];
+		}
+		return 0;
+	}
+
+	__device__ byte predictPL(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
+		--x;
+		--y;
+		short sum = 0;
+		if(x < w && y < h){
+			sum -= oData[y * w + x];
+		}
+		++x;
+		if(x < w && y < h){
+			sum += oData[y * w + x];
+		}
+		--x;
+		++y;
+		if(x < w && y < h){
+			sum += oData[y * w + x];
+		}
+
+		if(sum < 0){
+			sum = 0;
+		}else if(sum > 255){
+			sum = 255;
+		}
+		return sum;
+	}
+
+	__device__ byte predictW(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
+		--x;
+		if(x < w && y < h){
+			return oData[y * w + x];
+		}
+		return 0;
+	}
+
+	__device__ byte (* predictors[])(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h)
+	{
+		predictGN,
+		predictGW,
+		predictN,
+		predictNE,
+		predictNW,
+		predictPL,
+		predictW,
+		NULL
+	};
+
 	__device__ void insert(PixelDistance pixelDist, PixelDistance similarPixels[M], unsigned* numOfSimilarPixels){
 		for(int i = 0; i < *numOfSimilarPixels; ++i){
 			if(pixelDist.distance < similarPixels[i].distance){
@@ -226,6 +336,9 @@ PGMCBPDCUDA::PGMCBPDCUDA(	vector<PGMImageError>& inputImagesError,
 }
 
 PGMCBPDCUDA::~PGMCBPDCUDA(){
+	for(auto& stream : streams){
+		CUDA_CHECK_RETURN(cudaStreamDestroy(stream));
+	}
 	CUDA_CHECK_RETURN(cudaDeviceReset());
 }
 
@@ -237,7 +350,6 @@ void PGMCBPDCUDA::decode(){
 											dRadiusOffset,
 											dVectorOffset,
 											imagesMeta[i]);
-		CUDA_CHECK_RETURN(cudaStreamDestroy(streams[i]));
 	}
 
 	for(int i = 0; i < streams.size(); ++i){
