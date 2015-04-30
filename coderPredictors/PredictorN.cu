@@ -13,9 +13,6 @@ namespace {
 
 	__global__ void predict(void *diData, void *dPredicted, unsigned w, unsigned h) {
 		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
-		if(absolutePosition == 5000){
-			absolutePosition = 5000;
-		}
 		unsigned x = absolutePosition % w;
 		unsigned y = absolutePosition / w;
 		if(x < w && y < h){

@@ -18,8 +18,7 @@
 
 struct PGMCBPDCUDA{
 	PGMCBPDCUDA(vector<PGMImageError>& inputImagesError,
-				vector<PGMImage>& outputImages,
-				vector<PGMImage>& predictionImages
+				vector<PGMImage>& outputImages
 				);
 	~PGMCBPDCUDA();
 
@@ -28,13 +27,14 @@ struct PGMCBPDCUDA{
 private:
 	vector<PGMImageError>& inputImagesError;
 	vector<PGMImage>& outputImages;
-	vector<PGMImage>& predictionImages;
 
 	vector<cudaStream_t> streams;
 	vector<ImageWHSize> imagesMeta;
 	vector<short*> iData;
 	vector<byte*> oData;
-	vector<byte*> pData;
+	vector<short*> pData;
+	byte* verify;
+	byte* verify2;
 
 	PixelOffset radiusOffset[R_A];
 	PixelOffset vectorOffset[D];
@@ -42,6 +42,7 @@ private:
 	vector<void*> diData;
 	vector<void*> doData;
 	vector<void*> dpData;
+	vector<void*> dspData;
 	void* dRadiusOffset;
 	void* dVectorOffset;
 };

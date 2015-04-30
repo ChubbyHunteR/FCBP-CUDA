@@ -86,10 +86,11 @@ namespace {
 		float* penalties = new float[numOfPredictors];
 		for(int i = 0; i < numOfPredictors; ++i){
 			unsigned sum = 0;
+			int staticPrediction;
 			for(int j = 0; j < numOfSimilarPixels; ++j){
-				int prediction = predicted[i][similarPixels[j].x + similarPixels[j].y * w ];
+				staticPrediction = predicted[i][similarPixels[j].x + similarPixels[j].y * w ];
 				int pixel = iData[ similarPixels[j].x + similarPixels[j].y * w ];
-				sum += (prediction - pixel) * (prediction - pixel);
+				sum += (staticPrediction - pixel) * (staticPrediction - pixel);
 			}
 			if(sum == 0){
 				delete[] penalties;
@@ -167,6 +168,7 @@ namespace {
 		if(numOfSimilarPixels == 0){
 			oData[absolutePosition] = pData[absolutePosition];
 			eData[absolutePosition] = iData[absolutePosition] - pData[absolutePosition];
+			return;
 		}
 
 		int errorSum = 0;

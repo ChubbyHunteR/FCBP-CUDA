@@ -2,6 +2,7 @@
 #include "PGMCBPDCUDA.h"
 
 #define SWAP(a, b) (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b)))
+#define NUM_PREDICTORS 7
 
 struct PixelDistance{
 	unsigned x, y, distance;
@@ -10,8 +11,6 @@ struct PixelDistance{
 };
 
 namespace {
-	__device__ unsigned numOfPredictors = 7;
-
 	__device__ byte predictGN(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
 		y -= 2;
 		int sum = 0;
@@ -79,7 +78,7 @@ namespace {
 	__device__ byte predictPL(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h) {
 		--x;
 		--y;
-		short sum = 0;
+		int sum = 0;
 		if(x < w && y < h){
 			sum -= oData[y * w + x];
 		}
@@ -111,13 +110,13 @@ namespace {
 
 	__device__ byte (* predictors[])(byte *oData, unsigned x, unsigned y, unsigned w, unsigned h)
 	{
-		predictGN,
-		predictGW,
 		predictN,
-		predictNE,
 		predictNW,
-		predictPL,
+		predictGW,
 		predictW,
+		predictNE,
+		predictGN,
+		predictPL,
 		NULL
 	};
 
@@ -165,12 +164,12 @@ namespace {
 	}
 
 	__device__ byte predict(byte* oData,
+							short* pData,
 							unsigned anchorX,
 							unsigned anchorY,
-							unsigned w,
-							unsigned h,
 							PixelOffset* radiusOffset,
-							PixelOffset* vectorOffset)
+							PixelOffset* vectorOffset,
+							ImageWHSize imageMeta)
 	{
 		unsigned numOfSimilarPixels = 0;
 		PixelDistance similarPixels[M];
@@ -179,8 +178,8 @@ namespace {
 		for(int i = 0; i < R_A; ++i){
 			pixelDist.x = anchorX + radiusOffset[i].x;
 			pixelDist.y = anchorY + radiusOffset[i].y;
-			if(pixelDist.x < w && pixelDist.y < h){
-				pixelDist.distance = distance(oData, anchorX, anchorY, pixelDist.x, pixelDist.y, vectorOffset, w, h);
+			if(pixelDist.x < imageMeta.w && pixelDist.y < imageMeta.h){
+				pixelDist.distance = distance(oData, anchorX, anchorY, pixelDist.x, pixelDist.y, vectorOffset, imageMeta.w, imageMeta.h);
 				insert(pixelDist, similarPixels, &numOfSimilarPixels);
 			}
 		}
@@ -188,36 +187,41 @@ namespace {
 			return 0;
 		}
 
-		byte* predictions = new byte[numOfPredictors];
-		float* penalties = new float[numOfPredictors];
-		for(int i = 0; i < numOfPredictors; ++i){
+		float penalties[NUM_PREDICTORS];
+		for(int i = 0; i < NUM_PREDICTORS; ++i){
 			unsigned sum = 0;
+			int staticPrediction = -1;
 			for(int j = 0; j < numOfSimilarPixels; ++j){
-				predictions[i] = predictors[i](oData, similarPixels[j].x, similarPixels[j].y, w, h);
-				int pixel = oData[ similarPixels[j].x + similarPixels[j].y * w ];
-				sum += (predictions[i] - pixel) * (predictions[i] - pixel);
+				staticPrediction = pData[i * imageMeta.size + similarPixels[j].x + similarPixels[j].y * imageMeta.w];
+				if(staticPrediction == -1){
+					pData[i * imageMeta.size + similarPixels[j].x + similarPixels[j].y * imageMeta.w] =
+					staticPrediction =
+					predictors[i](oData, similarPixels[j].x, similarPixels[j].y, imageMeta.w, imageMeta.h);
+				}
+				int pixel = oData[ similarPixels[j].x + similarPixels[j].y * imageMeta.w ];
+				sum += (staticPrediction - pixel) * (staticPrediction - pixel);
 			}
 			if(sum == 0){
-				delete[] predictions;
-				delete[] penalties;
-				return predictions[i];
+				return pData[i * imageMeta.size + anchorX + anchorY * imageMeta.w] =
+						predictors[i](oData, anchorX, anchorY, imageMeta.w, imageMeta.h);
 			}
 			penalties[i] = (float)sum / numOfSimilarPixels;
 		}
 
 		float sum = 0;
 		float penaltiesSum = 0;
-		for(int i = 0; i < numOfPredictors; ++i){
-			sum += predictions[i] / penalties[i];
+		for(int i = 0; i < NUM_PREDICTORS; ++i){
+			int prediction = pData[i * imageMeta.size + anchorX + anchorY * imageMeta.w] =
+					predictors[i](oData, anchorX, anchorY, imageMeta.w, imageMeta.h);
+			sum += prediction / penalties[i];
 			penaltiesSum += 1 / penalties[i];
 		}
-		delete[] predictions;
-		delete[] penalties;
 		return sum / penaltiesSum;
 	}
 
-	__device__ int errorCorrect(	void* doData,
-									void* dpData,
+	__device__ int errorCorrect(	byte* oData,
+									short* pData,
+									byte* spData,
 									unsigned anchorX,
 									unsigned anchorY,
 									unsigned w,
@@ -229,8 +233,6 @@ namespace {
 		PixelDistance similarPixels[M];
 		PixelDistance pixelDist;
 
-		byte* oData = (byte*) doData;
-		byte* pData = (byte*) dpData;
 		PixelOffset* radiusOffset = (PixelOffset*) dRadiusOffset;
 		PixelOffset* vectorOffset = (PixelOffset*) dVectorOffset;
 
@@ -248,7 +250,7 @@ namespace {
 
 		int errorSum = 0;
 		for(int i = 0; i < numOfSimilarPixels; ++i){
-			errorSum += pData[ similarPixels[i].x + similarPixels[i].y * w ] - oData[ similarPixels[i].x + similarPixels[i].y * w ];
+			errorSum += spData[ similarPixels[i].x + similarPixels[i].y * w ] - oData[ similarPixels[i].x + similarPixels[i].y * w ];
 		}
 		return errorSum / (int)numOfSimilarPixels;
 	}
@@ -256,27 +258,28 @@ namespace {
 	__global__ void decode(	void* diData,
 							void* doData,
 							void* dpData,
+							void* dspData,
 							void* dRadiusOffset,
 							void* dVectorOffset,
 							ImageWHSize imageMeta)
 	{
 		short* iData = (short*) diData;
 		byte* oData = (byte*) doData;
-		byte* pData = (byte*) dpData;
+		short* pData = (short*) dpData;
+		byte* spData = (byte*) dspData;
 		PixelOffset* radiusOffset = (PixelOffset*) dRadiusOffset;
 		PixelOffset* vectorOffset = (PixelOffset*) dVectorOffset;
 
 		for(unsigned y = 0; y < imageMeta.h; ++y){
 			for(unsigned x = 0; x < imageMeta.w; ++x){
 				unsigned pos = x + y * imageMeta.w;
-				int prediction = predict(oData, x, y, imageMeta.w, imageMeta.h, radiusOffset, vectorOffset);
-				prediction += errorCorrect(oData, pData, x, y, imageMeta.w, imageMeta.h, radiusOffset, vectorOffset);
+				int prediction = spData[pos] = predict(oData, pData, x, y, radiusOffset, vectorOffset, imageMeta);
+				prediction += errorCorrect(oData, pData, spData, x, y, imageMeta.w, imageMeta.h, radiusOffset, vectorOffset);
 				if(prediction < 0){
 					prediction = 0;
 				}else if(prediction > 255){
 					prediction = 255;
 				}
-				pData[pos] = prediction;
 				oData[pos] = prediction + iData[pos];
 			}
 		}
@@ -284,24 +287,20 @@ namespace {
 }
 
 PGMCBPDCUDA::PGMCBPDCUDA(	vector<PGMImageError>& inputImagesError,
-							vector<PGMImage>& outputImages,
-							vector<PGMImage>& predictionImages
+							vector<PGMImage>& outputImages
 						):
 		inputImagesError(inputImagesError),
-		outputImages(outputImages),
-		predictionImages(predictionImages)
+		outputImages(outputImages)
 {
 	for(auto& inputImageError : inputImagesError){
 		streams.emplace_back();
 		cudaStreamCreate(&streams.back());
 		imagesMeta.emplace_back(inputImageError.getWidth(), inputImageError.getHeight(), inputImageError.getSize());
 		iData.push_back(inputImageError.getBuffer());
+		pData.push_back(new short[NUM_PREDICTORS * inputImageError.getSize()]);
 	}
 	for(auto& outputImage : outputImages){
 		oData.push_back(outputImage.getBuffer());
-	}
-	for(auto& predictionImage : predictionImages){
-		pData.push_back(predictionImage.getBuffer());
 	}
 
 	for(int i = 0; i < R_A; ++i){
@@ -316,13 +315,16 @@ PGMCBPDCUDA::PGMCBPDCUDA(	vector<PGMImageError>& inputImagesError,
 	for(int i = 0; i < iData.size(); ++i){
 		cout<<"Memory allocation "<<i+1<<"/"<<iData.size()<<endl;
 
-		diData.push_back(NULL);
-		doData.push_back(NULL);
-		dpData.push_back(NULL);
+		diData.push_back(nullptr);
+		doData.push_back(nullptr);
+		dpData.push_back(nullptr);
+		dspData.push_back(nullptr);
 
 		CUDA_CHECK_RETURN(cudaMalloc(&diData[i], sizeof(short) * imagesMeta[i].size));
 		CUDA_CHECK_RETURN(cudaMalloc(&doData[i], sizeof(byte) * imagesMeta[i].size));
-		CUDA_CHECK_RETURN(cudaMalloc(&dpData[i], sizeof(byte) * imagesMeta[i].size));
+		CUDA_CHECK_RETURN(cudaMalloc(&dpData[i], NUM_PREDICTORS * sizeof(short) * imagesMeta[i].size));
+		CUDA_CHECK_RETURN(cudaMalloc(&dspData[i], sizeof(byte) * imagesMeta[i].size));
+		CUDA_CHECK_RETURN(cudaMemset(dpData[i], -1, NUM_PREDICTORS * sizeof(short) * imagesMeta[i].size));
 		CUDA_CHECK_RETURN(cudaMemcpy(diData[i], iData[i], sizeof(short) * imagesMeta[i].size, cudaMemcpyHostToDevice));
 
 		cout<<"DONE"<<endl;
@@ -347,6 +349,7 @@ void PGMCBPDCUDA::decode(){
 		::decode<<<1, 1, 0, streams[i]>>>(	diData[i],
 											doData[i],
 											dpData[i],
+											dspData[i],
 											dRadiusOffset,
 											dVectorOffset,
 											imagesMeta[i]);
@@ -355,6 +358,6 @@ void PGMCBPDCUDA::decode(){
 	for(int i = 0; i < streams.size(); ++i){
 		CUDA_CHECK_RETURN(cudaStreamSynchronize(streams[i]));
 		CUDA_CHECK_RETURN(cudaMemcpy(oData[i], doData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
-		CUDA_CHECK_RETURN(cudaMemcpy(pData[i], dpData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
+		CUDA_CHECK_RETURN(cudaMemcpy(pData[i], dpData[i], NUM_PREDICTORS * sizeof(short) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 	}
 }
