@@ -356,8 +356,15 @@ void PGMCBPDCUDA::decode(){
 	}
 
 	for(int i = 0; i < streams.size(); ++i){
+		cout << "Waiting for " << i+1 << "/" << streams.size() << endl;
 		CUDA_CHECK_RETURN(cudaStreamSynchronize(streams[i]));
+		cout << "DONE" << endl;
+	}
+
+	for(int i = 0; i < streams.size(); ++i){
+		cout << "Copying " << i+1 << "/" << streams.size() << endl;
 		CUDA_CHECK_RETURN(cudaMemcpy(oData[i], doData[i], sizeof(byte) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
 		CUDA_CHECK_RETURN(cudaMemcpy(pData[i], dpData[i], NUM_PREDICTORS * sizeof(short) * imagesMeta[i].size, cudaMemcpyDeviceToHost));
+		cout << "DONE" << endl;
 	}
 }
