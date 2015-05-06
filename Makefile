@@ -2,6 +2,11 @@ CC = nvcc
 CFLAGS = -O3 -std=c++11 -code sm_50 -arch compute_50
 CFLAGS_DEBUG = -g -G -std=c++11 -code sm_50 -arch compute_50 -DDEBUG
 
+GRC = grc
+GRC_DEBUG = grc_d
+GRD = grd
+GRD_DEBUG = grd_d
+
 
 ##################
 # COMMON OBJECTS #
@@ -33,7 +38,7 @@ DECODER_OBJECTS_DEBUG = PGMCBPDCUDA_d.o cbpd_d.o
 # COMMON RELEASE #
 ##################
 
-all: $(CODER) $(DECODER) $(CODER_TEST)
+all: $(CODER) $(DECODER) $(GRC) $(GRD)
 
 PGMImage.o: PGMImage.cpp PGMImage.h
 	$(CC) -c -o PGMImage.o $(CFLAGS) PGMImage.cpp
@@ -46,7 +51,7 @@ PGMImageError.o: PGMImageError.cpp PGMImageError.h
 # COMMON DEBUG #
 ################
 
-debug: $(CODER_DEBUG) $(DECODER_DEBUG)
+debug: $(CODER_DEBUG) $(DECODER_DEBUG) $(GRC_DEBUG) $(GRD_DEBUG)
 
 PGMImage_d.o: PGMImage.cpp PGMImage.h
 	$(CC) -c -o PGMImage_d.o $(CFLAGS_DEBUG) PGMImage.cpp
@@ -157,12 +162,63 @@ cbpd_d.o: cbpd.cpp config.h
 # CODER TESTER #
 ################
 
-tester: coderTester.cpp PGMImage.o PGMImageError.o
-	$(CC) -o ct -O3 -std=c++11 coderTester.cpp PGMImage.o PGMImageError.o
+tester: coderTester.cpp $(COMMON_OBJECTS)
+	$(CC) -o ct $(CFLAGS) coderTester.cpp $(COMMON_OBJECTS)
 
-tester_d: coderTester.cpp PGMImage_d.o PGMImageError_d.o
-	$(CC) -o ct_d -g -G -std=c++11 coderTester.cpp PGMImage_d.o PGMImageError_d.o
+tester_d: coderTester.cpp $(COMMON_OBJECTS_DEBUG)
+	$(CC) -o ct_d $(CFLAGS_DEBUG) coderTester.cpp $(COMMON_OBJECTS_DEBUG)
+
+
+############
+# GR CODER #
+############
+
+grc: GRcodec/grc.cpp GRCoder.o PGMImageError.o Bitset.o
+	$(CC) -o grc $(CFLAGS) GRcodec/grc.cpp GRCoder.o PGMImageError.o Bitset.o
+
+GRCoder.o: GRcodec/GRCoder.cpp GRcodec/GRCoder.h GRcodec/config.h
+	$(CC) -c -o GRCoder.o $(CFLAGS) GRcodec/GRCoder.cpp
+
+Bitset.o: GRcodec/Bitset.cpp GRcodec/Bitset.h
+	$(CC) -c -o Bitset.o $(CFLAGS) GRcodec/Bitset.cpp
+
+
+##################
+# GR CODER DEBUG #
+##################
+
+grc_d: GRcodec/grc.cpp PGMImageError_d.o GRCoder_d.o Bitset_d.o
+	$(CC) -o grc_d $(CFLAGS_DEBUG) GRcodec/grc.cpp PGMImageError_d.o GRCoder_d.o Bitset_d.o
+
+GRCoder_d.o: GRcodec/GRCoder.cpp GRcodec/GRCoder.h GRcodec/config.h
+	$(CC) -c -o GRCoder_d.o $(CFLAGS_DEBUG) GRcodec/GRCoder.cpp
+
+Bitset_d.o: GRcodec/Bitset.cpp GRcodec/Bitset.h
+	$(CC) -c -o Bitset_d.o $(CFLAGS_DEBUG) GRcodec/Bitset.cpp
+
+
+##############
+# GR DECODER #
+##############
+
+grd: GRcodec/grd.cpp GRDecoder.o PGMImageError.o Bitset.o
+	$(CC) -o grd $(CFLAGS) GRcodec/grd.cpp GRDecoder.o PGMImageError.o Bitset.o
+
+GRDecoder.o: GRcodec/GRDecoder.cpp GRcodec/GRDecoder.h GRcodec/config.h
+	$(CC) -c -o GRDecoder.o $(CFLAGS) GRcodec/GRDecoder.cpp
+
+
+####################
+# GR DECODER DEBUG #
+####################
+
+grd_d: GRcodec/grd.cpp PGMImageError_d.o GRDecoder_d.o Bitset_d.o
+	$(CC) -o grd_d $(CFLAGS_DEBUG) GRcodec/grd.cpp PGMImageError_d.o GRDecoder_d.o Bitset_d.o
+
+GRDecoder_d.o: GRcodec/GRDecoder.cpp GRcodec/GRDecoder.h GRcodec/config.h
+	$(CC) -c -o GRDecoder_d.o $(CFLAGS_DEBUG) GRcodec/GRDecoder.cpp
+
 
 
 clean:
-	-rm -f $(CODER) $(CODER_DEBUG) $(DECODER) $(DECODER_DEBUG) *.o ct ct_d
+	-rm -f $(CODER) $(CODER_DEBUG) $(DECODER) $(DECODER_DEBUG) $(GRC) $(GRC_DEBUG) $(GRD) $(GRD_DEBUG) *.o ct ct_d
