@@ -2,11 +2,12 @@
 #define PGMCBPDCUDA_H_
 
 #include <vector>
-#include "PGMImage.h"
-#include "PGMImageError.h"
-#include "config.h"
-#include "util.h"
 #include <cuda_runtime.h>
+
+#include "../PGM/PGMImage.h"
+#include "../PGM/PGMImageError.h"
+#include "../config.h"
+#include "../util.h"
 
 #define CUDA_CHECK_RETURN(value) {																						\
 	cudaError_t _m_cudaStat = value;																					\

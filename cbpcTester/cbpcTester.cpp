@@ -2,8 +2,9 @@
 #include <vector>
 #include <cstdlib>
 #include <string>
-#include "PGMImage.h"
-#include "PGMImageError.h"
+
+#include "../PGM/PGMImage.h"
+#include "../PGM/PGMImageError.h"
 
 string usage = " inputImage.pgm...";
 

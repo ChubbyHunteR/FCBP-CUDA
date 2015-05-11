@@ -1,5 +1,6 @@
-#include "PGMCBPCCUDA.h"
 #include <iostream>
+
+#include "PGMCBPCCUDA.h"
 
 #define SWAP(a, b) (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b)))
 

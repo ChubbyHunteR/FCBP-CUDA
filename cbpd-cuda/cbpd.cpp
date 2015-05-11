@@ -3,10 +3,8 @@
 #include <cstdlib>
 #include <string>
 #include <ctime>
-#include "PGMImage.h"
-#include "PGMImageError.h"
+
 #include "PGMCBPDCUDA.h"
-#include "config.h"
 
 string usage = " inputImageErrorFile...";
 

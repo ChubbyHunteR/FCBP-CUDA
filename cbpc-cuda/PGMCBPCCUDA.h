@@ -2,11 +2,12 @@
 #define PGMCBPCCUDA_H_
 
 #include <vector>
-#include "PGMImage.h"
-#include "PGMImageError.h"
-#include "coderPredictors/Predictor.h"
-#include "config.h"
-#include "util.h"
+
+#include "../PGM/PGMImage.h"
+#include "../PGM/PGMImageError.h"
+#include "../staticPredictors-cuda/Predictor.h"
+#include "../config.h"
+#include "../util.h"
 
 #define CUDA_CHECK_RETURN(value) {																						\
 	cudaError_t _m_cudaStat = value;																					\

@@ -3,17 +3,15 @@
 #include <cstdlib>
 #include <string>
 #include <ctime>
-#include "PGMImage.h"
-#include "PGMImageError.h"
+
 #include "PGMCBPCCUDA.h"
-#include "coderPredictors/PredictorN.h"
-#include "coderPredictors/PredictorNW.h"
-#include "coderPredictors/PredictorGW.h"
-#include "coderPredictors/PredictorW.h"
-#include "coderPredictors/PredictorNE.h"
-#include "coderPredictors/PredictorGN.h"
-#include "coderPredictors/PredictorPL.h"
-#include "config.h"
+#include "../staticPredictors-cuda/PredictorN.h"
+#include "../staticPredictors-cuda/PredictorNW.h"
+#include "../staticPredictors-cuda/PredictorGW.h"
+#include "../staticPredictors-cuda/PredictorW.h"
+#include "../staticPredictors-cuda/PredictorNE.h"
+#include "../staticPredictors-cuda/PredictorGN.h"
+#include "../staticPredictors-cuda/PredictorPL.h"
 
 string usage = " inputImage.pgm...";
 

@@ -1,14 +1,14 @@
 #ifndef GRCODER_H_
 #define GRCODER_H_
 
-
 #include <fstream>
 #include <vector>
-using namespace std;
 
-#include "config.h"
-#include "../PGMImageError.h"
+#include "GRconfig.h"
+#include "../PGM/PGMImageError.h"
 #include "Bitset.h"
+
+using namespace std;
 
 class GRCoder{
 

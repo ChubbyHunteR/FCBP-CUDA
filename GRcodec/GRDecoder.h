@@ -8,8 +8,8 @@
 #include <string>
 using namespace std;
 
-#include "config.h"
-#include "../PGMImageError.h"
+#include "GRconfig.h"
+#include "../PGM/PGMImageError.h"
 #include "Bitset.h"
 
 class GRDecoder{

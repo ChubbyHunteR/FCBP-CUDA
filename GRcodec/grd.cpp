@@ -4,10 +4,10 @@
 #include <cstdlib>
 #include <string>
 #include <ctime>
-using namespace std;
 
-#include "../PGMImageError.h"
 #include "GRDecoder.h"
+
+using namespace std;
 
 string usage = " inputImageErrorEncoded.pgm...";
 
