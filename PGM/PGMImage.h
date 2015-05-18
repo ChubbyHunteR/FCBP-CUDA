@@ -29,6 +29,7 @@ public:
     byte* getBuffer();
 	void writePixel(unsigned x, unsigned y, byte pixel);
 	void writePixel(unsigned p, byte pixel);
+	void setBuffer(byte* buffer);
 
 	void imageToText();
 

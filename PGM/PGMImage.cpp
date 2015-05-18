@@ -101,6 +101,12 @@ void PGMImage::writePixel(unsigned x, unsigned y, byte pixel) {
     }
 }
 
+void PGMImage::setBuffer(byte *buffer){
+	if(buffer != imgBuffer){
+		imgBuffer = buffer;
+	}
+}
+
 void PGMImage::imageToText() {
 	string txtImageName(imgName);
 	txtImageName += ".txt";

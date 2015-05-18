@@ -97,3 +97,9 @@ void PGMImageError::writePixel(unsigned p, short pixel) {
     	imgBuffer[p] = pixel;
     }
 }
+
+void PGMImageError::setBuffer(short *buffer){
+	if(buffer != imgBuffer){
+		imgBuffer = buffer;
+	}
+}

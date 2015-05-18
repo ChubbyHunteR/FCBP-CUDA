@@ -27,6 +27,7 @@ public:
     short* getBuffer();
 	void writePixel(unsigned x, unsigned y, short pixel);
 	void writePixel(unsigned p, short pixel);
+	void setBuffer(short *buffer);
 
 protected:
 	ios_base::openmode mode;
