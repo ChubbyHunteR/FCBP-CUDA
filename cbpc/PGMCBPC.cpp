@@ -71,8 +71,8 @@ bool PGMCBPC::getStaticPrediction(unsigned predictorIndex){
 void PGMCBPC::predict(){
 	for(unsigned i = 0; i < inputImages.size(); ++i){
 		cout<<"Prediction "<<i+1<<"/"<<inputImages.size()<<endl;
-		predict(iData[i], pData[i],	predictors.size(), radiusOffset, vectorOffset, imagesMeta[i]);
-		errorCorrect(iData[i], pData[i], oData[i], eData[i], radiusOffset, vectorOffset, imagesMeta[i]);
+		predict(i);
+		errorCorrect(i);
 
 		cout<<"DONE"<<endl;
 	}
@@ -85,13 +85,13 @@ void PGMCBPC::predict(unsigned imageIndex){
 
 	for(unsigned y = 0; y < imagesMeta[imageIndex].h; ++y){
 		for(unsigned x = 0; x < imagesMeta[imageIndex].w; ++ x){
-			byte prediction = predictElement(x, y);
-			oData[y * imagesMeta[imageIndex].w + x] = prediction;
+			byte prediction = predictElement(imageIndex, x, y);
+			oData[imageIndex][y * imagesMeta[imageIndex].w + x] = prediction;
 		}
 	}
 }
 
-byte PGMCBPC::predictElement(unsigned anchorX, unsigned anchorY){
+byte PGMCBPC::predictElement(unsigned imageIndex, unsigned anchorX, unsigned anchorY){
 	unsigned numOfSimilarPixels = 0;
 	PixelDistance similarPixels[M];
 	PixelDistance pixelDist;
@@ -103,7 +103,7 @@ byte PGMCBPC::predictElement(unsigned anchorX, unsigned anchorY){
 		pixelDist.x = anchorX + radiusOffset[i].x;
 		pixelDist.y = anchorY + radiusOffset[i].y;
 		if(pixelDist.x < w && pixelDist.y < h){
-			pixelDist.distance = distance(iData, anchorX, anchorY, pixelDist.x, pixelDist.y, vectorOffset, w, h);
+			pixelDist.distance = distance(iData[imageIndex], anchorX, anchorY, pixelDist.x, pixelDist.y);
 			insert(pixelDist, similarPixels, &numOfSimilarPixels);
 		}
 	}
@@ -117,7 +117,7 @@ byte PGMCBPC::predictElement(unsigned anchorX, unsigned anchorY){
 		int staticPrediction;
 		for(int j = 0; j < numOfSimilarPixels; ++j){
 			staticPrediction = predicted[i][similarPixels[j].x + similarPixels[j].y * w ];
-			int pixel = iData[ similarPixels[j].x + similarPixels[j].y * w ];
+			int pixel = iData[imageIndex][ similarPixels[j].x + similarPixels[j].y * w ];
 			sum += (staticPrediction - pixel) * (staticPrediction - pixel);
 		}
 		if(sum == 0){
@@ -137,7 +137,7 @@ byte PGMCBPC::predictElement(unsigned anchorX, unsigned anchorY){
 	return sum / penaltiesSum;
 }
 
-unsigned PGMCBPC::distance(unsigned anchorX, unsigned anchorY, unsigned x, unsigned y, unsigned w, unsigned h){
+unsigned PGMCBPC::distance(unsigned imageIndex, unsigned anchorX, unsigned anchorY, unsigned x, unsigned y){
 	unsigned x1, x2, y1, y2;
 	int sum = 0, pix1, pix2;
 	for(int i = 0; i < D; ++i){
@@ -146,10 +146,10 @@ unsigned PGMCBPC::distance(unsigned anchorX, unsigned anchorY, unsigned x, unsig
 		x2 = x + vectorOffset[i].x;
 		y2 = y + vectorOffset[i].y;
 		pix1 = pix2 = 0;
-		if(x1 < w && y1 < h){
+		if(x1 < imagesMeta[imageIndex].w && y1 < imagesMeta[imageIndex].h){
 			pix1 = iData[x1 + y1 * w];
 		}
-		if(x2 < w && y2 < h){
+		if(x2 < imagesMeta[imageIndex].w && y2 < imagesMeta[imageIndex].h){
 			pix2 = iData[x2 + y2 * w];
 		}
 		sum += (pix1-pix2) * (pix1-pix2);
@@ -172,14 +172,7 @@ void PGMCBPC::insert(PixelDistance pixelDist, PixelDistance similarPixels[M], un
 	}
 }
 
-void PGMCBPC::errorCorrect(	void* diData,
-								void* dpData,
-								void* doData,
-								void* deData,
-								void* dRadiusOffset,
-								void* dVectorOffset,
-								ImageWHSize imageMeta)
-{
+void PGMCBPC::errorCorrect(unsigned imageIndex){
 	unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
 	unsigned anchorX = absolutePosition % imageMeta.w;
 	unsigned anchorY = absolutePosition / imageMeta.w;
@@ -190,37 +183,30 @@ void PGMCBPC::errorCorrect(	void* diData,
 	PixelDistance similarPixels[M];
 	PixelDistance pixelDist;
 
-	byte* iData = (byte*) diData;
-	byte* pData = (byte*) dpData;
-	byte* oData = (byte*) doData;
-	short* eData = (short*) deData;
-	PixelOffset* radiusOffset = (PixelOffset*) dRadiusOffset;
-	PixelOffset* vectorOffset = (PixelOffset*) dVectorOffset;
-
 	for(int i = 0; i < R_A; ++i){
 		pixelDist.x = anchorX + radiusOffset[i].x;
 		pixelDist.y = anchorY + radiusOffset[i].y;
 		if(pixelDist.x < imageMeta.w && pixelDist.y < imageMeta.h){
-			pixelDist.distance = distance(iData, anchorX, anchorY, pixelDist.x, pixelDist.y, vectorOffset, imageMeta.w, imageMeta.h);
+			pixelDist.distance = distance(imageIndex, anchorX, anchorY, pixelDist.x, pixelDist.y);
 			insert(pixelDist, similarPixels, &numOfSimilarPixels);
 		}
 	}
 	if(numOfSimilarPixels == 0){
-		oData[absolutePosition] = pData[absolutePosition];
-		eData[absolutePosition] = iData[absolutePosition] - pData[absolutePosition];
+		oData[imageIndex][absolutePosition] = pData[imageIndex][absolutePosition];
+		eData[imageIndex][absolutePosition] = iData[imageIndex][absolutePosition] - pData[imageIndex][absolutePosition];
 		return;
 	}
 
 	int errorSum = 0;
 	for(int i = 0; i < numOfSimilarPixels; ++i){
-		errorSum += pData[ similarPixels[i].x + similarPixels[i].y * imageMeta.w ] - iData[ similarPixels[i].x + similarPixels[i].y * imageMeta.w ];
+		errorSum += pData[imageIndex][ similarPixels[i].x + similarPixels[i].y * imageMeta.w ] - iData[imageIndex][ similarPixels[i].x + similarPixels[i].y * imageMeta.w ];
 	}
-	int prediction = (int)pData[absolutePosition] + errorSum / (int)numOfSimilarPixels;
+	int prediction = (int)pData[imageIndex][absolutePosition] + errorSum / (int)numOfSimilarPixels;
 	if(prediction < 0){
 		prediction = 0;
 	}else if(prediction > 255){
 		prediction = 255;
 	}
-	oData[absolutePosition] = prediction;
-	eData[absolutePosition] = iData[absolutePosition] - prediction;
+	oData[imageIndex][absolutePosition] = prediction;
+	eData[imageIndex][absolutePosition] = iData[imageIndex][absolutePosition] - prediction;
 }

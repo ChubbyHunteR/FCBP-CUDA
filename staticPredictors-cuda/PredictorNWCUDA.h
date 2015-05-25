@@ -1,10 +1,10 @@
-#ifndef PREDICTORNW_H_
-#define PREDICTORNW_H_
+#ifndef PREDICTORNWCUDA_H_
+#define PREDICTORNWCUDA_H_
 
-#include "Predictor.h"
+#include "PredictorCUDA.h"
 
 struct PredictorNW : public Predictor{
 	virtual void cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h);
 };
 
-#endif /* PREDICTORNW_H_ */
+#endif /* PREDICTORNWCUDA_H_ */

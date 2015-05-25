@@ -2,13 +2,50 @@ CC = nvcc
 CFLAGS = -O3 -std=c++11 -code sm_50 -arch compute_50
 CFLAGS_DEBUG = -g -G -std=c++11 -code sm_50 -arch compute_50 -DDEBUG
 
+all: $(CODER) $(DECODER) $(CODER_CUDA) $(DECODER_CUDA) $(GRC) $(GRD) $(CODER_TESTER)
 
-##################
-# COMMON OBJECTS #
-##################
+debug: $(CODER_DEBUG) $(DECODER_DEBUG) $(CODER_CUDA_DEBUG) $(DECODER_CUDA_DEBUG) $(GRC_DEBUG) $(GRD_DEBUG) $(CODER_TESTER_DEBUG)
 
-COMMON_OBJECTS = PGMImage.o PGMImageError.o
-COMMON_OBJECTS_DEBUG = PGMImage_d.o PGMImageError_d.o
+clean:
+	-rm -f 	$(CODER) $(CODER_DEBUG) $(DECODER) $(DECODER_DEBUG)\
+			$(CODER_CUDA) $(CODER_CUDA_DEBUG) $(DECODER_CUDA) $(DECODER_CUDA_DEBUG)\
+			$(GRC) $(GRC_DEBUG) $(GRD) $(GRD_DEBUG)\
+			$(CODER_TESTER) $(CODER_TESTER_DEBUG)\
+			*.o
+
+
+####################
+# PGMIMAGE OBJECTS #
+####################
+
+PGMImage.o: PGM/PGMImage.cpp PGM/PGMImage.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PGMImageError.o: PGM/PGMImageError.cpp PGM/PGMImageError.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PGMImage_d.o: PGM/PGMImage.cpp PGM/PGMImage.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PGMImageError_d.o: PGM/PGMImageError.cpp PGM/PGMImageError.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+
+################
+# CODER TESTER #
+################
+
+CODER_TESTER = ct
+CODER_TESTER_DEBUG = ct_d
+CODER_TESTER_OBJECTS = PGMImage.o PGMImageError.o
+CODER_TESTER_OBJECTS_DEBUG = PGMImage_d.o PGMImageError_d.o
+
+ct: cbpcTester/cbpcTester.cpp $(PGMIMAGES)
+	$(CC) -o $@ $(CFLAGS) $< $(PGMIMAGES)
+
+ct_d: cbpcTester/cbpcTester.cpp $(PGMIMAGES_DEBUG)
+	$(CC) -o $@ $(CFLAGS_DEBUG) $< $(PGMIMAGES_DEBUG)
+
 
 #####################
 # GOLOMB RICE CODEC #
@@ -16,213 +53,206 @@ COMMON_OBJECTS_DEBUG = PGMImage_d.o PGMImageError_d.o
 
 GRC = grc
 GRC_DEBUG = grc_d
-GRD = grd
-GRD_DEBUG = grd_d 
+GRC_OBJECTS = GRCoder.o PGMImageError.o Bitset.o
+GRC_OBJECTS_DEBUG = PGMImageError_d.o GRCoder_d.o Bitset_d.o
 
-
-#################
-# CODER OBJECTS #
-#################
-CODER = cbpc
-CODER_DEBUG = cbpc_d
-CODER_OBJECTS = PredictorN.o PredictorNW.o PredictorGW.o PredictorW.o PredictorNE.o PredictorGN.o PredictorPL.o PGMCBPCCUDA.o cbpc.o
-CODER_OBJECTS_DEBUG = PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_d.o PredictorNE_d.o PredictorGN_d.o PredictorPL_d.o PGMCBPCCUDA_d.o cbpc_d.o
-
-
-###################
-# DECODER OBJECTS #
-###################
-DECODER = cbpd
-DECODER_DEBUG = cbpd_d
-DECODER_OBJECTS = PGMCBPDCUDA.o cbpd.o
-DECODER_OBJECTS_DEBUG = PGMCBPDCUDA_d.o cbpd_d.o
-
-
-##################
-# COMMON RELEASE #
-##################
-
-all: $(CODER) $(DECODER) $(GRC) $(GRD)
-
-PGMImage.o: PGM/PGMImage.cpp PGM/PGMImage.h
-	$(CC) -c -o PGMImage.o $(CFLAGS) PGM/PGMImage.cpp
-
-PGMImageError.o: PGM/PGMImageError.cpp PGM/PGMImageError.h
-	$(CC) -c -o PGMImageError.o $(CFLAGS) PGM/PGMImageError.cpp
-
-
-################
-# COMMON DEBUG #
-################
-
-debug: $(CODER_DEBUG) $(DECODER_DEBUG) $(GRC_DEBUG) $(GRD_DEBUG)
-
-PGMImage_d.o: PGM/PGMImage.cpp PGM/PGMImage.h
-	$(CC) -c -o PGMImage_d.o $(CFLAGS_DEBUG) PGM/PGMImage.cpp
-
-PGMImageError_d.o: PGM/PGMImageError.cpp PGM/PGMImageError.h
-	$(CC) -c -o PGMImageError_d.o $(CFLAGS_DEBUG) PGM/PGMImageError.cpp
-
-
-#################
-# CODER RELEASE #
-#################
-
-$(CODER): $(COMMON_OBJECTS) $(CODER_OBJECTS)
-	$(CC) -o $(CODER) $(CFLAGS) $(COMMON_OBJECTS) $(CODER_OBJECTS)
-
-PredictorN.o: staticPredictors-cuda/PredictorN.cu staticPredictors-cuda/PredictorN.h
-	$(CC) -c -o PredictorN.o $(CFLAGS) staticPredictors-cuda/PredictorN.cu
-
-PredictorNW.o: staticPredictors-cuda/PredictorNW.cu staticPredictors-cuda/PredictorNW.h
-	$(CC) -c -o PredictorNW.o $(CFLAGS) staticPredictors-cuda/PredictorNW.cu
-
-PredictorGW.o: staticPredictors-cuda/PredictorGW.cu staticPredictors-cuda/PredictorGW.h
-	$(CC) -c -o PredictorGW.o $(CFLAGS) staticPredictors-cuda/PredictorGW.cu
-
-PredictorW.o: staticPredictors-cuda/PredictorW.cu staticPredictors-cuda/PredictorW.h
-	$(CC) -c -o PredictorW.o $(CFLAGS) staticPredictors-cuda/PredictorW.cu
-
-PredictorNE.o: staticPredictors-cuda/PredictorNE.cu staticPredictors-cuda/PredictorNE.h
-	$(CC) -c -o PredictorNE.o $(CFLAGS) staticPredictors-cuda/PredictorNE.cu
-
-PredictorGN.o: staticPredictors-cuda/PredictorGN.cu staticPredictors-cuda/PredictorGN.h
-	$(CC) -c -o PredictorGN.o $(CFLAGS) staticPredictors-cuda/PredictorGN.cu
-
-PredictorPL.o: staticPredictors-cuda/PredictorPL.cu staticPredictors-cuda/PredictorPL.h
-	$(CC) -c -o PredictorPL.o $(CFLAGS) staticPredictors-cuda/PredictorPL.cu
-
-PGMCBPCCUDA.o: cbpc-cuda/PGMCBPCCUDA.cu cbpc-cuda/PGMCBPCCUDA.h config.h util.h
-	$(CC) -c -o PGMCBPCCUDA.o $(CFLAGS) cbpc-cuda/PGMCBPCCUDA.cu
-
-cbpc.o: cbpc-cuda/cbpc.cpp config.h
-	$(CC) -c -o cbpc.o $(CFLAGS) cbpc-cuda/cbpc.cpp
-
-
-###############
-# CODER DEBUG #
-###############
-
-$(CODER_DEBUG): $(COMMON_OBJECTS_DEBUG) $(CODER_OBJECTS_DEBUG)
-	$(CC) -o $(CODER_DEBUG) $(CFLAGS_DEBUG) $(COMMON_OBJECTS_DEBUG) $(CODER_OBJECTS_DEBUG)
-
-PredictorN_d.o: staticPredictors-cuda/PredictorN.cu staticPredictors-cuda/PredictorN.h
-	$(CC) -c -o PredictorN_d.o $(CFLAGS_DEBUG) staticPredictors-cuda/PredictorN.cu
-
-PredictorNW_d.o: staticPredictors-cuda/PredictorNW.cu staticPredictors-cuda/PredictorNW.h
-	$(CC) -c -o PredictorNW_d.o $(CFLAGS_DEBUG) staticPredictors-cuda/PredictorNW.cu
-
-PredictorGW_d.o: staticPredictors-cuda/PredictorGW.cu staticPredictors-cuda/PredictorGW.h
-	$(CC) -c -o PredictorGW_d.o $(CFLAGS_DEBUG) staticPredictors-cuda/PredictorGW.cu
-
-PredictorW_d.o: staticPredictors-cuda/PredictorW.cu staticPredictors-cuda/PredictorW.h
-	$(CC) -c -o PredictorW_d.o $(CFLAGS_DEBUG) staticPredictors-cuda/PredictorW.cu
-
-PredictorNE_d.o: staticPredictors-cuda/PredictorNE.cu staticPredictors-cuda/PredictorNE.h
-	$(CC) -c -o PredictorNE_d.o $(CFLAGS_DEBUG) staticPredictors-cuda/PredictorNE.cu
-
-PredictorGN_d.o: staticPredictors-cuda/PredictorGN.cu staticPredictors-cuda/PredictorGN.h
-	$(CC) -c -o PredictorGN_d.o $(CFLAGS_DEBUG) staticPredictors-cuda/PredictorGN.cu
-
-PredictorPL_d.o: staticPredictors-cuda/PredictorPL.cu staticPredictors-cuda/PredictorPL.h
-	$(CC) -c -o PredictorPL_d.o $(CFLAGS_DEBUG) staticPredictors-cuda/PredictorPL.cu
-
-PGMCBPCCUDA_d.o: cbpc-cuda/PGMCBPCCUDA.cu cbpc-cuda/PGMCBPCCUDA.h config.h util.h
-	$(CC) -c -o PGMCBPCCUDA_d.o $(CFLAGS_DEBUG) cbpc-cuda/PGMCBPCCUDA.cu
-
-cbpc_d.o: cbpc-cuda/cbpc.cpp config.h
-	$(CC) -c -o cbpc_d.o $(CFLAGS_DEBUG) cbpc-cuda/cbpc.cpp
-
-
-###################
-# DECODER RELEASE #
-###################
-
-$(DECODER): $(COMMON_OBJECTS) $(DECODER_OBJECTS)
-	$(CC) -o $(DECODER) $(CFLAGS) $(COMMON_OBJECTS) $(DECODER_OBJECTS)
-
-PGMCBPDCUDA.o: cbpd-cuda/PGMCBPDCUDA.cu cbpd-cuda/PGMCBPDCUDA.h config.h util.h
-	$(CC) -c -o PGMCBPDCUDA.o $(CFLAGS) cbpd-cuda/PGMCBPDCUDA.cu
-
-cbpd.o: cbpd-cuda/cbpd.cpp config.h
-	$(CC) -c -o cbpd.o $(CFLAGS) cbpd-cuda/cbpd.cpp
-
-
-#################
-# DECODER DEBUG #
-#################
-
-$(DECODER_DEBUG): $(COMMON_OBJECTS_DEBUG) $(DECODER_OBJECTS_DEBUG)
-	$(CC) -o $(DECODER_DEBUG) $(CFLAGS_DEBUG) $(COMMON_OBJECTS_DEBUG) $(DECODER_OBJECTS_DEBUG)
-
-PGMCBPDCUDA_d.o: cbpd-cuda/PGMCBPDCUDA.cu cbpd-cuda/PGMCBPDCUDA.h config.h util.h
-	$(CC) -c -o PGMCBPDCUDA_d.o $(CFLAGS_DEBUG) cbpd-cuda/PGMCBPDCUDA.cu
-
-cbpd_d.o: cbpd-cuda/cbpd.cpp config.h
-	$(CC) -c -o cbpd_d.o $(CFLAGS_DEBUG) cbpd-cuda/cbpd.cpp
-
-
-################
-# CODER TESTER #
-################
-
-tester: cbpcTester/cbpcTester.cpp $(COMMON_OBJECTS)
-	$(CC) -o ct $(CFLAGS) cbpcTester/cbpcTester.cpp $(COMMON_OBJECTS)
-
-tester_d: cbpcTester/cbpcTester.cpp $(COMMON_OBJECTS_DEBUG)
-	$(CC) -o ct_d $(CFLAGS_DEBUG) cbpcTester/cbpcTester.cpp $(COMMON_OBJECTS_DEBUG)
-
-
-############
-# GR CODER #
-############
-
-grc: GRcodec/grc.cpp GRCoder.o PGMImageError.o Bitset.o
-	$(CC) -o grc $(CFLAGS) GRcodec/grc.cpp GRCoder.o PGMImageError.o Bitset.o
+$(GRC): GRcodec/grc.cpp $(GRC_OBJECTS)
+	$(CC) -o $@ $(CFLAGS) $< $(GRC_OBJECTS)
 
 GRCoder.o: GRcodec/GRCoder.cpp GRcodec/GRCoder.h GRcodec/GRconfig.h
-	$(CC) -c -o GRCoder.o $(CFLAGS) GRcodec/GRCoder.cpp
+	$(CC) -c -o $@ $(CFLAGS) $<
 
 Bitset.o: GRcodec/Bitset.cpp GRcodec/Bitset.h
-	$(CC) -c -o Bitset.o $(CFLAGS) GRcodec/Bitset.cpp
+	$(CC) -c -o $@ $(CFLAGS) $<
 
-
-##################
-# GR CODER DEBUG #
-##################
-
-grc_d: GRcodec/grc.cpp PGMImageError_d.o GRCoder_d.o Bitset_d.o
-	$(CC) -o grc_d $(CFLAGS_DEBUG) GRcodec/grc.cpp PGMImageError_d.o GRCoder_d.o Bitset_d.o
+$(GRC_DEBUG): GRcodec/grc.cpp $(GRC_OBJECTS_DEBUG)
+	$(CC) -o $@ $(CFLAGS_DEBUG) $< $(GRC_OBJECTS_DEBUG)
 
 GRCoder_d.o: GRcodec/GRCoder.cpp GRcodec/GRCoder.h GRcodec/GRconfig.h
-	$(CC) -c -o GRCoder_d.o $(CFLAGS_DEBUG) GRcodec/GRCoder.cpp
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
 
 Bitset_d.o: GRcodec/Bitset.cpp GRcodec/Bitset.h
-	$(CC) -c -o Bitset_d.o $(CFLAGS_DEBUG) GRcodec/Bitset.cpp
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
 
+GRD = grd
+GRD_DEBUG = grd_d
+GRD_OBJECTS = GRDecoder.o PGMImageError.o Bitset.o
+GRD_OBJECTS_DEBUG = PGMImageError_d.o GRDecoder_d.o Bitset_d.o
 
-##############
-# GR DECODER #
-##############
-
-grd: GRcodec/grd.cpp GRDecoder.o PGMImageError.o Bitset.o
-	$(CC) -o grd $(CFLAGS) GRcodec/grd.cpp GRDecoder.o PGMImageError.o Bitset.o
+$(GRD): GRcodec/grd.cpp $(GRD_OBJECTS)
+	$(CC) -o $@ $(CFLAGS) $< $(GRD_OBJECTS)
 
 GRDecoder.o: GRcodec/GRDecoder.cpp GRcodec/GRDecoder.h GRcodec/GRconfig.h
-	$(CC) -c -o GRDecoder.o $(CFLAGS) GRcodec/GRDecoder.cpp
+	$(CC) -c -o $@ $(CFLAGS) $<
 
-
-####################
-# GR DECODER DEBUG #
-####################
-
-grd_d: GRcodec/grd.cpp PGMImageError_d.o GRDecoder_d.o Bitset_d.o
-	$(CC) -o grd_d $(CFLAGS_DEBUG) GRcodec/grd.cpp PGMImageError_d.o GRDecoder_d.o Bitset_d.o
+$(GRD_DEBUG): GRcodec/grd.cpp $(GRD_OBJECTS_DEBUG)
+	$(CC) -o $@ $(CFLAGS_DEBUG) $< $(GRD_OBJECTS_DEBUG)
 
 GRDecoder_d.o: GRcodec/GRDecoder.cpp GRcodec/GRDecoder.h GRcodec/GRconfig.h
-	$(CC) -c -o GRDecoder_d.o $(CFLAGS_DEBUG) GRcodec/GRDecoder.cpp
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
 
 
+##############
+# CODER CUDA #
+##############
 
-clean:
-	-rm -f $(CODER) $(CODER_DEBUG) $(DECODER) $(DECODER_DEBUG) $(GRC) $(GRC_DEBUG) $(GRD) $(GRD_DEBUG) *.o ct ct_d
+CODER_CUDA = cbpc-cuda
+CODER_CUDA_DEBUG = cbpc-cuda_d
+CODER_CUDA_OBJECTS =	PredictorNCUDA.o PredictorNWCUDA.o PredictorGWCUDA.o PredictorWCUDA.o PredictorNECUDA.o PredictorGNCUDA.o PredictorPLCUDA.o\
+						PGMCBPCCUDA.o PGMImage.o PGMImageError.o
+CODER_CUDA_OBJECTS_DEBUG =	PredictorNCUDA_d.o PredictorNWCUDA_d.o PredictorGWCUDA_d.o PredictorWCUDA_d.o PredictorNECUDA_d.o PredictorGNCUDA_d.o PredictorPLCUDA_d.o\
+							PGMCBPCCUDA_d.o PGMImage_d.o PGMImageError_d.o
+
+$(CODER_CUDA): cbpc-cuda/cbpc.cpp $(CODER_CUDA_OBJECTS) config.h
+	$(CC) -o $@ $(CFLAGS) $< $(CODER_CUDA_OBJECTS)
+
+PredictorNCUDA.o: staticPredictors-cuda/PredictorNCUDA.cu staticPredictors-cuda/PredictorNCUDA.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorNWCUDA.o: staticPredictors-cuda/PredictorNWCUDA.cu staticPredictors-cuda/PredictorNWCUDA.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorGWCUDA.o: staticPredictors-cuda/PredictorGWCUDA.cu staticPredictors-cuda/PredictorGWCUDA.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorWCUDA.o: staticPredictors-cuda/PredictorWCUDA.cu staticPredictors-cuda/PredictorWCUDA.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorNECUDA.o: staticPredictors-cuda/PredictorNECUDA.cu staticPredictors-cuda/PredictorNECUDA.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorGNCUDA.o: staticPredictors-cuda/PredictorGNCUDA.cu staticPredictors-cuda/PredictorGNCUDA.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorPLCUDA.o: staticPredictors-cuda/PredictorPLCUDA.cu staticPredictors-cuda/PredictorPLCUDA.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PGMCBPCCUDA.o: cbpc-cuda/PGMCBPCCUDA.cu cbpc-cuda/PGMCBPCCUDA.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+$(CODER_CUDA_DEBUG): cbpc-cuda/cbpc.cpp $(CODER_CUDA_OBJECTS_DEBUG)
+	$(CC) -o $@ $(CFLAGS_DEBUG) $< $(CODER_CUDA_OBJECTS_DEBUG)
+
+PredictorNCUDA_d.o: staticPredictors-cuda/PredictorNCUDA.cu staticPredictors-cuda/PredictorNCUDA.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorNWCUDA_d.o: staticPredictors-cuda/PredictorNWCUDA.cu staticPredictors-cuda/PredictorNWCUDA.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorGWCUDA_d.o: staticPredictors-cuda/PredictorGWCUDA.cu staticPredictors-cuda/PredictorGWCUDA.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorWCUDA_d.o: staticPredictors-cuda/PredictorWCUDA.cu staticPredictors-cuda/PredictorWCUDA.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorNECUDA_d.o: staticPredictors-cuda/PredictorNECUDA.cu staticPredictors-cuda/PredictorNECUDA.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorGNCUDA_d.o: staticPredictors-cuda/PredictorGNCUDA.cu staticPredictors-cuda/PredictorGNCUDA.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorPLCUDA_d.o: staticPredictors-cuda/PredictorPLCUDA.cu staticPredictors-cuda/PredictorPLCUDA.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PGMCBPCCUDA_d.o: cbpc-cuda/PGMCBPCCUDA.cu cbpc-cuda/PGMCBPCCUDA.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+CODER = cbpc
+CODER_DEBUG = cbpc_d
+CODER_OBJECTS =	PredictorN.o PredictorNW.o PredictorGW.o PredictorW.o PredictorNE.o PredictorGN.o PredictorPL.o\
+				PGMCBPCCUDA.o PGMImage.o PGMImageError.o
+CODER_OBJECTS_DEBUG =	PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_d.o PredictorNE_d.o PredictorGN_d.o PredictorPL_d.o\
+						PGMCBPCCUDA_d.o PGMImage_d.o PGMImageError_d.o
+
+$(CODER): cbpc/cbpc.cpp $(CODER_OBJECTS) config.h
+	$(CC) -o $@ $(CFLAGS) $< $(CODER_OBJECTS)
+
+PredictorN.o: staticPredictors/PredictorN.cu staticPredictors/PredictorN.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorNW.o: staticPredictors/PredictorNW.cu staticPredictors/PredictorNW.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorGW.o: staticPredictors/PredictorGW.cu staticPredictors/PredictorGW.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorW.o: staticPredictors/PredictorW.cu staticPredictors/PredictorW.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorNE.o: staticPredictors/PredictorNE.cu staticPredictors/PredictorNE.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorGN.o: staticPredictors/PredictorGN.cu staticPredictors/PredictorGN.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PredictorPL.o: staticPredictors/PredictorPL.cu staticPredictors/PredictorPL.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+PGMCBPC.o: cbpc/PGMCBPC.cpp cbpc/PGMCBPC.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+$(CODER_DEBUG): cbpc/cbpc.cpp $(CODER_OBJECTS_DEBUG)
+	$(CC) -o $@ $(CFLAGS_DEBUG) $< $(CODER_OBJECTS_DEBUG)
+
+PredictorN_d.o: staticPredictors/PredictorN.cu staticPredictors/PredictorN.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorNW_d.o: staticPredictors/PredictorNW.cu staticPredictors/PredictorNW.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorGW_d.o: staticPredictors/PredictorGW.cu staticPredictors/PredictorGW.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorW_d.o: staticPredictors/PredictorW.cu staticPredictors/PredictorW.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorNE_d.o: staticPredictors/PredictorNE.cu staticPredictors/PredictorNE.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorGN_d.o: staticPredictors/PredictorGN.cu staticPredictors/PredictorGN.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PredictorPL_d.o: staticPredictors/PredictorPL.cu staticPredictors/PredictorPL.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+PGMCBPC_d.o: cbpc/PGMCBPC.cpp cbpc/PGMCBPC.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+
+################
+# DECODER CUDA #
+################
+
+DECODER_CUDA = cbpd-cuda
+DECODER_CUDA_DEBUG = cbpd-cuda_d
+DECODER_CUDA_OBJECTS = PGMCBPDCUDA.o
+DECODER_CUDA_OBJECTS_DEBUG = PGMCBPDCUDA_d.o
+
+$(DECODER_CUDA): cbpd-cuda/cbpd.cpp $(DECODER_CUDA_OBJECTS) config.h
+	$(CC) -o $@ $(CFLAGS) $< $(DECODER_CUDA_OBJECTS)
+
+PGMCBPDCUDA.o: cbpd-cuda/PGMCBPDCUDA.cu cbpd-cuda/PGMCBPDCUDA.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+$(DECODER_CUDA_DEBUG): cbpd-cuda/cbpd.cpp $(DECODER_CUDA_OBJECTS_DEBUG) config.h
+	$(CC) -o $@ $(CFLAGS_DEBUG) $< $(DECODER_CUDA_OBJECTS_DEBUG)
+
+PGMCBPDCUDA_d.o: cbpd-cuda/PGMCBPDCUDA.cu cbpd-cuda/PGMCBPDCUDA.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
+
+DECODER = cbpd
+DECODER_DEBUG = cbpd_d
+DECODER_OBJECTS = PGMCBPD.o
+DECODER_OBJECTS_DEBUG = PGMCBPD_d.o
+
+$(DECODER): cbpd/cbpd.cpp $(DECODER_OBJECTS) config.h
+	$(CC) -o $@ $(CFLAGS) $< $(DECODER_OBJECTS)
+
+PGMCBPD.o: cbpd/PGMCBPD.cpp cbpd/PGMCBPD.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+$(DECODER_DEBUG): cbpd/cbpd.cpp $(DECODER_OBJECTS_DEBUG) config.h
+	$(CC) -o $@ $(CFLAGS_DEBUG) $< $(DECODER_OBJECTS_DEBUG)
+
+PGMCBPD_d.o: cbpd/PGMCBPD.cpp cbpd/PGMCBPD.h config.h util.h
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<

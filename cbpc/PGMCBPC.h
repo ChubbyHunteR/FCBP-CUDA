@@ -27,9 +27,10 @@ struct PGMCBPC{
 
 private:
 	void predict(unsigned imageIndex);
-	byte predictElement(unsigned x, unsigned y);
+	void errorCorrect(unsigned imageIndex);
+	byte predictElement(unsigned imageIndex, unsigned x, unsigned y);
 
-	unsigned distance(unsigned anchorX,unsigned anchorY, unsigned x, unsigned y, unsigned w,unsigned h);
+	unsigned distance(unsigned imageIndex, unsigned anchorX, unsigned anchorY, unsigned x, unsigned y);
 	void insert(PixelDistance pixelDist, PixelDistance similarPixels[M], unsigned* numOfSimilarPixels);
 
 	vector<PGMImage>& inputImages;

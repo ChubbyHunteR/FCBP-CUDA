@@ -1,4 +1,4 @@
-#include "PredictorW.h"
+#include "PredictorPLCUDA.h"
 #include "../config.h"
 
 namespace {
@@ -6,11 +6,27 @@ namespace {
 	__device__ byte predict(byte *iData, unsigned w, unsigned h) {
 		unsigned absolutePosition = threadIdx.x + blockIdx.x * THREADS;
 		unsigned x = absolutePosition % w - 1;
-		unsigned y = absolutePosition / w;
+		unsigned y = absolutePosition / w - 1;
+		short sum = 0;
 		if(x < w && y < h){
-			return iData[y * w + x];
+			sum -= iData[y * w + x];
 		}
-		return 0;
+		++x;
+		if(x < w && y < h){
+			sum += iData[y * w + x];
+		}
+		--x;
+		++y;
+		if(x < w && y < h){
+			sum += iData[y * w + x];
+		}
+
+		if(sum < 0){
+			sum = 0;
+		}else if(sum > 255){
+			sum = 255;
+		}
+		return sum;
 	}
 
 	__global__ void predict(void *diData, void *dPredicted, unsigned w, unsigned h) {
@@ -26,7 +42,7 @@ namespace {
 	}
 }
 
-void PredictorW::cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h){
+void PredictorPL::cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h){
 	unsigned size = w * h;
 	::predict<<<size/THREADS + 1, THREADS>>>(diData, dPredicted, w, h);
 }

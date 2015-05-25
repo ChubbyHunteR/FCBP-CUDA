@@ -1,4 +1,4 @@
-#include "PredictorN.h"
+#include "PredictorNCUDA.h"
 #include "../config.h"
 
 namespace {

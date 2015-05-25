@@ -1,9 +1,9 @@
-#ifndef PREDICTOR_H_
-#define PREDICTOR_H_
+#ifndef PREDICTORCUDA_H_
+#define PREDICTORCUDA_H_
 typedef unsigned char byte;
 
 struct Predictor{
 	virtual void cudaPredictAll(void *diData, void *dPredicted, unsigned w, unsigned h) = 0;
 };
 
-#endif /* PREDICTOR_H_ */
+#endif /* PREDICTORCUDA_H_ */
