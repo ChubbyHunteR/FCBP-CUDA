@@ -5,7 +5,7 @@
 
 #include "../PGM/PGMImage.h"
 #include "../PGM/PGMImageError.h"
-#include "../staticPredictors-cuda/Predictor.h"
+#include "../staticPredictors-cuda/PredictorCUDA.h"
 #include "../config.h"
 #include "../util.h"
 

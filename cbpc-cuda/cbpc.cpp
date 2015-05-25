@@ -5,13 +5,13 @@
 #include <ctime>
 
 #include "PGMCBPCCUDA.h"
-#include "../staticPredictors-cuda/PredictorN.h"
-#include "../staticPredictors-cuda/PredictorNW.h"
-#include "../staticPredictors-cuda/PredictorGW.h"
-#include "../staticPredictors-cuda/PredictorW.h"
-#include "../staticPredictors-cuda/PredictorNE.h"
-#include "../staticPredictors-cuda/PredictorGN.h"
-#include "../staticPredictors-cuda/PredictorPL.h"
+#include "../staticPredictors-cuda/PredictorNCUDA.h"
+#include "../staticPredictors-cuda/PredictorNWCUDA.h"
+#include "../staticPredictors-cuda/PredictorGWCUDA.h"
+#include "../staticPredictors-cuda/PredictorWCUDA.h"
+#include "../staticPredictors-cuda/PredictorNECUDA.h"
+#include "../staticPredictors-cuda/PredictorGNCUDA.h"
+#include "../staticPredictors-cuda/PredictorPLCUDA.h"
 
 string usage = " inputImage.pgm...";
 

@@ -7,6 +7,7 @@
 #include "../PGM/PGMImageError.h"
 #include "../staticPredictors/Predictor.h"
 #include "../util.h"
+#include "../config.h"
 
 struct PixelDistance{
 	unsigned x, y, distance;
@@ -27,8 +28,9 @@ struct PGMCBPC{
 
 private:
 	void predict(unsigned imageIndex);
-	void errorCorrect(unsigned imageIndex);
 	byte predictElement(unsigned imageIndex, unsigned x, unsigned y);
+	void errorCorrect(unsigned imageIndex);
+	void errorCorrectElement(unsigned imageIndex, unsigned anchorX, unsigned anchorY);
 
 	unsigned distance(unsigned imageIndex, unsigned anchorX, unsigned anchorY, unsigned x, unsigned y);
 	void insert(PixelDistance pixelDist, PixelDistance similarPixels[M], unsigned* numOfSimilarPixels);
@@ -42,6 +44,7 @@ private:
 	vector<byte*> iData;
 	vector<byte*> oData;
 	vector<byte**> pData;
+	vector<byte*> pMemoData;
 	vector<short*> eData;
 
 	PixelOffset radiusOffset[R_A];

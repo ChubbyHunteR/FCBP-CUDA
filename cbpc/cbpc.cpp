@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
 	predictors.push_back(new PredictorGN);
 	predictors.push_back(new PredictorPL);
 
-	PGMCBP cbpc(inputImages, outputImages, errorImages, predictors);
+	PGMCBPC cbpc(inputImages, outputImages, errorImages, predictors);
 	cbpc.predict();
 
 	return 0;
