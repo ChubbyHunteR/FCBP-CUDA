@@ -34,8 +34,6 @@ private:
 	vector<short*> iData;
 	vector<byte*> oData;
 	vector<short*> pData;
-	byte* verify;
-	byte* verify2;
 
 	PixelOffset radiusOffset[R_A];
 	PixelOffset vectorOffset[D];
