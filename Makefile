@@ -33,7 +33,7 @@ CODER_DEBUG = cbpcoder_d
 CODER_OBJECTS =	PredictorN.o PredictorNW.o PredictorGW.o PredictorW.o PredictorNE.o PredictorGN.o PredictorPL.o\
 				Predictor.o PGMCBPC.o PGMImage.o PGMImageError.o
 CODER_OBJECTS_DEBUG =	PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_d.o PredictorNE_d.o PredictorGN_d.o PredictorPL_d.o\
-						Predictor.o PGMCBPC_d.o PGMImage_d.o PGMImageError_d.o
+						Predictor_d.o PGMCBPC_d.o PGMImage_d.o PGMImageError_d.o
 
 DECODER_CUDA = cbpdecoder-cuda
 DECODER_CUDA_DEBUG = cbpdecoder-cuda_d
@@ -45,7 +45,7 @@ DECODER_DEBUG = cbpdecoder_d
 DECODER_OBJECTS =	PredictorN.o PredictorNW.o PredictorGW.o PredictorW.o PredictorNE.o PredictorGN.o PredictorPL.o\
 					Predictor.o PGMCBPD.o PGMImage.o PGMImageError.o
 DECODER_OBJECTS_DEBUG =	PredictorN_d.o PredictorNW_d.o PredictorGW_d.o PredictorW_d.o PredictorNE_d.o PredictorGN_d.o PredictorPL_d.o\
-						Predictor_d.o PGMCBPD_d.o PGMImage.o PGMImageError.o
+						Predictor_d.o PGMCBPD_d.o PGMImage_d.o PGMImageError_d.o
 
 all: $(CODER) $(DECODER) $(CODER_CUDA) $(DECODER_CUDA) $(GRC) $(GRD) $(CODER_TESTER)
 
@@ -160,8 +160,7 @@ PredictorNCUDA_d.o: staticPredictors-cuda/PredictorNCUDA.cu staticPredictors-cud
 	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
 
 PredictorNWCUDA_d.o: staticPredictors-cuda/PredictorNWCUDA.cu staticPredictors-cuda/PredictorNWCUDA.h
-	$(CC) -c -o $@ : error: ‘PGMCBP’ was not declared in this scope
-	$(CFLAGS_DEBUG) $<
+	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
 
 PredictorGWCUDA_d.o: staticPredictors-cuda/PredictorGWCUDA.cu staticPredictors-cuda/PredictorGWCUDA.h
 	$(CC) -c -o $@ $(CFLAGS_DEBUG) $<
