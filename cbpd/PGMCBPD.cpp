@@ -30,10 +30,10 @@ unsigned PGMCBPD::distance(unsigned imageIndex, unsigned anchorX, unsigned ancho
 		y2 = y + vectorOffset[i].y;
 		pix1 = pix2 = 0;
 		if(x1 < imagesMeta[imageIndex].w && y1 < imagesMeta[imageIndex].h){
-			pix1 = iData[imageIndex][x1 + y1 * imagesMeta[imageIndex].w];
+			pix1 = oData[imageIndex][x1 + y1 * imagesMeta[imageIndex].w];
 		}
 		if(x2 < imagesMeta[imageIndex].w && y2 < imagesMeta[imageIndex].h){
-			pix2 = iData[imageIndex][x2 + y2 * imagesMeta[imageIndex].w];
+			pix2 = oData[imageIndex][x2 + y2 * imagesMeta[imageIndex].w];
 		}
 		sum += (pix1-pix2) * (pix1-pix2);
 	}
@@ -66,6 +66,7 @@ byte PGMCBPD::predictElement(unsigned imageIndex, unsigned anchorX, unsigned anc
 			sum += (staticPrediction - pixel) * (staticPrediction - pixel);
 		}
 		if(sum == 0){
+			delete[] penalties;
 			return pMemoData[imageIndex][i * imagesMeta[imageIndex].size + anchorX + anchorY * imagesMeta[imageIndex].w];
 		}
 		penalties[i] = (float)sum / numOfSimilarPixels;

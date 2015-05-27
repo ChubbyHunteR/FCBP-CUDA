@@ -116,9 +116,8 @@ byte PGMCBPC::predictElement(unsigned imageIndex, unsigned anchorX, unsigned anc
 	float* penalties = new float[predictors.size()];
 	for(int i = 0; i < predictors.size(); ++i){
 		unsigned sum = 0;
-		int staticPrediction;
 		for(int j = 0; j < numOfSimilarPixels; ++j){
-			staticPrediction = pData[imageIndex][i][similarPixels[j].x + similarPixels[j].y * imagesMeta[imageIndex].w ];
+			int staticPrediction = pData[imageIndex][i][similarPixels[j].x + similarPixels[j].y * imagesMeta[imageIndex].w ];
 			int pixel = iData[imageIndex][ similarPixels[j].x + similarPixels[j].y * imagesMeta[imageIndex].w ];
 			sum += (staticPrediction - pixel) * (staticPrediction - pixel);
 		}
@@ -175,8 +174,8 @@ void PGMCBPC::insert(PixelDistance pixelDist, PixelDistance similarPixels[M], un
 }
 
 void PGMCBPC::errorCorrect(unsigned imageIndex){
-	for(unsigned x = 0; x < imagesMeta[imageIndex].w; ++x){
-		for(unsigned y = 0; y < imagesMeta[imageIndex].h; ++y){
+	for(unsigned y = 0; y < imagesMeta[imageIndex].h; ++y){
+		for(unsigned x = 0; x < imagesMeta[imageIndex].w; ++x){
 			errorCorrectElement(imageIndex, x, y);
 		}
 	}
