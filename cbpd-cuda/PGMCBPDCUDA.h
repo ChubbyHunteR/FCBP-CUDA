@@ -29,19 +29,18 @@ private:
 	vector<PGMImageError>& inputImagesError;
 	vector<PGMImage>& outputImages;
 
-	vector<cudaStream_t> streams;
 	vector<ImageWHSize> imagesMeta;
 	vector<short*> iData;
 	vector<byte*> oData;
-	vector<short*> pData;
 
 	PixelOffset radiusOffset[R_A];
 	PixelOffset vectorOffset[D];
 
-	vector<void*> diData;
-	vector<void*> doData;
-	vector<void*> dpData;
-	vector<void*> dspData;
+	void* diData;
+	void* doData;
+	void* dpMemoData;
+	void* dpData;
+	void* dImagesMeta;
 	void* dRadiusOffset;
 	void* dVectorOffset;
 };

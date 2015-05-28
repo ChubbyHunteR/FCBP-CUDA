@@ -23,7 +23,7 @@
 /*
 * THREADS defines the number of threads per block to run on the GPU.
 */
-#define THREADS 1024
+#define THREADS 512
 
 #define LOOP 20
 
