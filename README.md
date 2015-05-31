@@ -11,17 +11,17 @@ make
 Debug build:
 make debug
 
-Tester for the coder:
-make tester
-
 Clean:
 make clean
 
 Directory structure
 ===================
-cbpc-cuda - CBP coder, CUDA.
-cbpcTester - CBPC tester.
-cbpd-cuda - CBP decoder, CUDA.
-GRcodec - Golomb Rice coder and decoder.
+cbpc - CBP coder
+cbpc-cuda - CBP coder, CUDA
+cbpd - CBP decoder
+cbpd-cuda - CBP decoder, CUDA
+cbpcTester - CBPC tester
+GRcodec - Golomb Rice coder and decoder
 PGM - Classes that handle PGM images and the 'error' file, which is a file that holds the difference between a prediction and the original.
-staticPredictors-cuda - Static predictors that are weighted before they produce a final prediction, CUDA.
+staticPredictors - Static predictors that are weighted before they produce a final prediction
+staticPredictors-cuda - Static predictors that are weighted before they produce a final prediction, CUDA
