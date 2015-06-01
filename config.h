@@ -28,6 +28,6 @@
 /*
  * The OS has a limit on how many files may be opened simultaneously. This limit batches all the input files.
  */
-#define FILESET_SIZE 340
+#define FILESET_SIZE 330
 
 #endif /* CONFIG_H_ */
