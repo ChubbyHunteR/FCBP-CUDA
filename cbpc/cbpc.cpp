@@ -26,38 +26,40 @@ int main(int argc, char* argv[]) {
 		fail(usage);
 	}
 
-	vector<PGMImage> inputImages;
-	vector<PGMImage> outputImages;
-	vector<PGMImageError> errorImages;
-	for(int i = 1; i < argc; ++i){
-		string inputName = argv[i];
-		size_t dot = inputName.find_last_of('.');
-		if(dot == inputName.npos){
-			dot = inputName.length();
+	for(unsigned fileOffset = 0; fileOffset < argc; fileOffset += FILESET_SIZE){
+		vector<PGMImage> inputImages;
+		vector<PGMImage> outputImages;
+		vector<PGMImageError> errorImages;
+		for(int i = 1; i < FILESET_SIZE && i < argc; ++i){
+			string inputName = argv[i + fileOffset];
+			size_t dot = inputName.find_last_of('.');
+			if(dot == inputName.npos){
+				dot = inputName.length();
+			}
+			string outputName = inputName.substr(0, dot) + "_prediction" + inputName.substr(dot);
+			string errorName = inputName.substr(0, dot) + "_error" + inputName.substr(dot);
+
+			inputImages.emplace_back(inputName.c_str());
+			unsigned w = inputImages[i-1].getWidth();
+			unsigned h = inputImages[i-1].getHeight();
+			unsigned size = inputImages[i-1].getSize();
+			unsigned maxPixel = inputImages[i-1].getPixelMax();
+			outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
+			errorImages.emplace_back(errorName.c_str(), w, h, maxPixel);
 		}
-		string outputName = inputName.substr(0, dot) + "_prediction" + inputName.substr(dot);
-		string errorName = inputName.substr(0, dot) + "_error" + inputName.substr(dot);
 
-		inputImages.emplace_back(inputName.c_str());
-		unsigned w = inputImages[i-1].getWidth();
-		unsigned h = inputImages[i-1].getHeight();
-		unsigned size = inputImages[i-1].getSize();
-		unsigned maxPixel = inputImages[i-1].getPixelMax();
-		outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
-		errorImages.emplace_back(errorName.c_str(), w, h, maxPixel);
+		vector<Predictor*> predictors;
+		predictors.push_back(new PredictorN);
+		predictors.push_back(new PredictorNW);
+		predictors.push_back(new PredictorGW);
+		predictors.push_back(new PredictorW);
+		predictors.push_back(new PredictorNE);
+		predictors.push_back(new PredictorGN);
+		predictors.push_back(new PredictorPL);
+
+		PGMCBPC cbpc(inputImages, outputImages, errorImages, predictors);
+		cbpc.predict();
 	}
-
-	vector<Predictor*> predictors;
-	predictors.push_back(new PredictorN);
-	predictors.push_back(new PredictorNW);
-	predictors.push_back(new PredictorGW);
-	predictors.push_back(new PredictorW);
-	predictors.push_back(new PredictorNE);
-	predictors.push_back(new PredictorGN);
-	predictors.push_back(new PredictorPL);
-
-	PGMCBPC cbpc(inputImages, outputImages, errorImages, predictors);
-	cbpc.predict();
 
 	return 0;
 }

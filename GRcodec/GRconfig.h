@@ -19,4 +19,9 @@ static int _log_2_m[] = {
 		8, 8, 8, 8, 8, 8, 8, 8
 };
 
+/*
+ * Same as in ../config.h
+ */
+#define FILESET_SIZE 350
+
 #endif /* CONFIG_H_ */
