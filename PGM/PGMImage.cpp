@@ -43,7 +43,7 @@ PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, unsigne
 		width(width), height(height), pixelMax(pixelMax)
 {        
 	if(imgFile->fail()){
-		cerr<<"Opening of output file failed."<<endl;
+		cerr<<"Opening of output file '"<< imgName <<"' failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 
