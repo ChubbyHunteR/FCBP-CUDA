@@ -19,10 +19,10 @@ int main(int argc, char* argv[]) {
 		fail(usage);
 	}
 
-	for(unsigned fileOffset = 0; fileOffset < argc; fileOffset += FILESET_SIZE){
+	for(unsigned fileOffset = 0; fileOffset < argc; fileOffset += FILESET_SIZE*1.5){
 		vector<PGMImageError> inputImagesError;
 		vector<PGMImage> outputImages;
-		for(int i = 0; i < FILESET_SIZE && i + fileOffset < argc; ++i){
+		for(int i = 0; i < FILESET_SIZE*1.5 && i + fileOffset < argc; ++i){
 			if(i + fileOffset == 0){
 				++i;
 			}
