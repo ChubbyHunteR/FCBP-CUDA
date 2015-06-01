@@ -26,6 +26,9 @@ int main(int argc, char* argv[]) {
 		vector<ifstream*> inputs;
 		vector<GRDecoder> decoders;
 		for(int i = 1; i < FILESET_SIZE && i < argc; ++i){
+			if(i + fileOffset == 0){
+				++i;
+			}
 			string inputName = argv[i + fileOffset];
 			size_t dot = inputName.find_last_of('.');
 			if(dot == inputName.npos){
