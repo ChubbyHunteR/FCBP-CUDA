@@ -13,7 +13,7 @@ PGMImageError::PGMImageError(const char* imgName) :
 		width(0), height(0), pixelMax(0)
 {
 	if(imgFile->fail()){
-		cerr<<"Opening of input file "<<imgName<<" failed."<<endl;
+		cerr<<"Opening of input file '"<<imgName<<"' failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -29,7 +29,7 @@ PGMImageError::PGMImageError(const char* imgName, unsigned width, unsigned heigh
 		width(width), height(height), pixelMax(pixelMax), imgName(imgName)
 {
 	if(imgFile->fail()){
-		cerr<<"Opening of output file failed."<<endl;
+		cerr<<"Opening of output file '" << imgName << "' failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 
