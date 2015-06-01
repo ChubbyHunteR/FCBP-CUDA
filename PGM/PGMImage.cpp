@@ -12,14 +12,14 @@ PGMImage::PGMImage(const char* imgName) :
 		height(0), pixelMax(0), width(0)
 {
 	if(imgFile->fail()){
-		cerr<<"Opening of input file "<<imgName<<" failed."<<endl;
+		cerr<<"Opening of input file '"<<imgName<<"' failed."<<endl;
 		exit(EXIT_FAILURE);
 	}
 	string tmp;
 	*imgFile >> tmp;
 	string magicNum(tmp);
 	if (magicNum != "P5") {
-        std::cerr << "Wrong file format " << imgName << endl;
+        std::cerr << "Wrong file format '" << imgName << "'" << endl;
 		exit(EXIT_FAILURE);
 	}
 
