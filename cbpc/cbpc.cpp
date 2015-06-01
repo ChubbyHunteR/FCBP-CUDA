@@ -31,6 +31,7 @@ int main(int argc, char* argv[]) {
 		vector<PGMImage> outputImages;
 		vector<PGMImageError> errorImages;
 		for(int i = 1; i < FILESET_SIZE && i < argc; ++i){
+			cout << "File:" << i << endl;
 			if(i + fileOffset == 0){
 				++i;
 			}

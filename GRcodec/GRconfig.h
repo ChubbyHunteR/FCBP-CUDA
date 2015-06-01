@@ -22,6 +22,6 @@ static int _log_2_m[] = {
 /*
  * Same as in ../config.h
  */
-#define FILESET_SIZE 350
+#define FILESET_SIZE 340
 
 #endif /* CONFIG_H_ */
