@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 			string outputName = inputName.substr(0, dot) + "_decoded" + inputName.substr(dot);
 
 			inputs.emplace_back(new ifstream(inputName, ios_base::in | ios_base::binary));
-			decoders.emplace_back(*inputs[i-1], outputName);
+			decoders.emplace_back(*inputs.back(), outputName);
 		}
 
 		for(auto& decoder : decoders){

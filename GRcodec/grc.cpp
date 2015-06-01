@@ -38,12 +38,12 @@ int main(int argc, char* argv[]) {
 			string outputName = inputName.substr(0, dot) + "_encoded" + inputName.substr(dot);
 
 			inputs.emplace_back(inputName.c_str());
-			unsigned w = inputs[i-1].getWidth();
-			unsigned h = inputs[i-1].getHeight();
-			unsigned size = inputs[i-1].getSize();
-			unsigned maxPixel = inputs[i-1].getPixelMax();
+			unsigned w = inputs.back().getWidth();
+			unsigned h = inputs.back().getHeight();
+			unsigned size = inputs.back().getSize();
+			unsigned maxPixel = inputs.back().getPixelMax();
 			outputs.emplace_back(new ofstream(outputName, ios_base::out | ios_base::binary));
-			coders.emplace_back(inputs[i-1], *outputs[i-1]);
+			coders.emplace_back(inputs.back(), *outputs.back());
 		}
 
 		for(auto& coder : coders){
