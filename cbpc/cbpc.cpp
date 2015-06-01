@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 		vector<PGMImage> inputImages;
 		vector<PGMImage> outputImages;
 		vector<PGMImageError> errorImages;
-		for(int i = 0; i < FILESET_SIZE && i < argc; ++i){
+		for(int i = 0; i < FILESET_SIZE && i + fileOffset < argc; ++i){
 			if(i + fileOffset == 0){
 				++i;
 			}

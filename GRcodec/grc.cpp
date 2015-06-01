@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 		vector<PGMImageError> inputs;
 		vector<ofstream*> outputs;
 		vector<GRCoder> coders;
-		for(int i = 1; i < FILESET_SIZE && i < argc; ++i){
+		for(int i = 1; i < FILESET_SIZE && i + fileOffset < argc; ++i){
 			if(i + fileOffset == 0){
 				++i;
 			}
