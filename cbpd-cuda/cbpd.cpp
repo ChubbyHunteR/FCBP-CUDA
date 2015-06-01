@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 	for(unsigned fileOffset = 0; fileOffset < argc; fileOffset += FILESET_SIZE){
 		vector<PGMImageError> inputImagesError;
 		vector<PGMImage> outputImages;
-		for(int i = 1; i < FILESET_SIZE && i < argc; ++i){
+		for(int i = 0; i < FILESET_SIZE && i < argc; ++i){
 			if(i + fileOffset == 0){
 				++i;
 			}
