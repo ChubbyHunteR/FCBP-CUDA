@@ -41,10 +41,10 @@ int main(int argc, char* argv[]) {
 			string outputName = inputName.substr(0, dot) + "_decoded" + inputName.substr(dot);
 
 			inputImagesError.emplace_back(inputName.c_str());
-			unsigned w = inputImagesError[i-1].getWidth();
-			unsigned h = inputImagesError[i-1].getHeight();
-			unsigned size = inputImagesError[i-1].getSize();
-			unsigned maxPixel = inputImagesError[i-1].getPixelMax();
+			unsigned w = inputImagesError.back().getWidth();
+			unsigned h = inputImagesError.back().getHeight();
+			unsigned size = inputImagesError.back().getSize();
+			unsigned maxPixel = inputImagesError.back().getPixelMax();
 			outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
 		}
 

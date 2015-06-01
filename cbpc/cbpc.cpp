@@ -43,10 +43,10 @@ int main(int argc, char* argv[]) {
 			string errorName = inputName.substr(0, dot) + "_error" + inputName.substr(dot);
 
 			inputImages.emplace_back(inputName.c_str());
-			unsigned w = inputImages[i-1].getWidth();
-			unsigned h = inputImages[i-1].getHeight();
-			unsigned size = inputImages[i-1].getSize();
-			unsigned maxPixel = inputImages[i-1].getPixelMax();
+			unsigned w = inputImages.back().getWidth();
+			unsigned h = inputImages.back().getHeight();
+			unsigned size = inputImages.back().getSize();
+			unsigned maxPixel = inputImages.back().getPixelMax();
 			outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
 			errorImages.emplace_back(errorName.c_str(), w, h, maxPixel);
 		}
