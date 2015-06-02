@@ -61,8 +61,7 @@ PGMImage::PGMImage(PGMImage&& other) :
 		width(other.width), height(other.height), pixelMax(other.pixelMax),
 		imgBuffer(other.imgBuffer)
 {
-	other.imgFile = nullptr;
-	other.imgBuffer = nullptr;
+	other.invalidate();
 }
 
 PGMImage::~PGMImage() {
@@ -130,4 +129,9 @@ void PGMImage::imageToText() {
 		}
 		txtImageFile << endl;
 	}
+}
+
+void PGMImage::invalidate(){
+	imgFile = nullptr;
+	imgBuffer = nullptr;
 }

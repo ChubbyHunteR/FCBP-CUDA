@@ -26,46 +26,41 @@ int main(int argc, char* argv[]) {
 		fail(usage);
 	}
 
-	vector<PGMImage> inputImages;
-	vector<PGMImage> outputImages;
-	vector<PGMImageError> errorImages;
-	for(int i = 1; i < argc; ++i){
-		string inputName = argv[i];
-		size_t dot = inputName.find_last_of('.');
-		if(dot == inputName.npos){
-			dot = inputName.length();
+	for(unsigned imageOffset = 0; imageOffset < argc; imageOffset += CUDA_MAX_IMG){
+		vector<PGMImage> inputImages;
+		vector<PGMImage> outputImages;
+		vector<PGMImageError> errorImages;
+		for(int i = 0; i < CUDA_MAX_IMG && i + imageOffset < argc; ++i){
+			if(i + imageOffset == 0){
+				++i;
+			}
+			string inputName = argv[i + imageOffset];
+			size_t dot = inputName.find_last_of('.');
+			if(dot == inputName.npos){
+				dot = inputName.length();
+			}
+			string outputName = inputName.substr(0, dot) + "_prediction" + inputName.substr(dot);
+			string errorName = inputName.substr(0, dot) + "_error" + inputName.substr(dot);
+
+			inputImages.emplace_back(inputName.c_str());
+			unsigned w = inputImages.back().getWidth();
+			unsigned h = inputImages.back().getHeight();
+			unsigned size = inputImages.back().getSize();
+			unsigned maxPixel = inputImages.back().getPixelMax();
+			outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
+			errorImages.emplace_back(errorName.c_str(), w, h, maxPixel);
 		}
-		string outputName = inputName.substr(0, dot) + "_prediction" + inputName.substr(dot);
-		string errorName = inputName.substr(0, dot) + "_error" + inputName.substr(dot);
 
-		inputImages.emplace_back(inputName.c_str());
-		unsigned w = inputImages.back().getWidth();
-		unsigned h = inputImages.back().getHeight();
-		unsigned size = inputImages.back().getSize();
-		unsigned maxPixel = inputImages.back().getPixelMax();
-		outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
-		errorImages.emplace_back(errorName.c_str(), w, h, maxPixel);
-	}
+		vector<Predictor*> predictors;
+		predictors.push_back(new PredictorN);
+		predictors.push_back(new PredictorNW);
+		predictors.push_back(new PredictorGW);
+		predictors.push_back(new PredictorW);
+		predictors.push_back(new PredictorNE);
+		predictors.push_back(new PredictorGN);
+		predictors.push_back(new PredictorPL);
 
-	vector<Predictor*> predictors;
-	predictors.push_back(new PredictorN);
-	predictors.push_back(new PredictorNW);
-	predictors.push_back(new PredictorGW);
-	predictors.push_back(new PredictorW);
-	predictors.push_back(new PredictorNE);
-	predictors.push_back(new PredictorGN);
-	predictors.push_back(new PredictorPL);
-
-	for(unsigned imageOffset = 0; imageOffset < inputImages.size(); imageOffset += CUDA_MAX_IMG){
-		vector<PGMImage> inputImagesTmp;
-		vector<PGMImage> outputImagesTmp;
-		vector<PGMImageError> errorImagesTmp;
-		for(unsigned i = 0; i < CUDA_MAX_IMG && i + imageOffset < inputImages.size(); ++i){
-			inputImagesTmp.push_back(inputImages[i + imageOffset]);
-			outputImagesTmp.push_back(outputImages[i + imageOffset]);
-			errorImagesTmp.push_back(errorImages[i + imageOffset]);
-		}
-		PGMCBPCCUDA cbpc(inputImagesTmp, outputImagesTmp, errorImagesTmp, predictors);
+		PGMCBPCCUDA cbpc(inputImages, outputImages, errorImages, predictors);
 		cbpc.predict();
 	}
 

@@ -108,3 +108,8 @@ void PGMImageError::setBuffer(short *buffer){
 		imgBuffer = buffer;
 	}
 }
+
+void PGMImageError::invalidate(){
+	imgFile = nullptr;
+	imgBuffer = nullptr;
+}

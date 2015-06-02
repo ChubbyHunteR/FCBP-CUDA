@@ -11,7 +11,7 @@ public:
 	PGMImageError(const char* imgName);
 	// Write constructor
 	PGMImageError(const char* imgName, unsigned width, unsigned height, unsigned pixelMax);
-	// Copy constructor
+	// Copy constructors
 	PGMImageError(PGMImageError&& other);
 
 	virtual ~PGMImageError();
@@ -28,6 +28,8 @@ public:
 	void writePixel(unsigned x, unsigned y, short pixel);
 	void writePixel(unsigned p, short pixel);
 	void setBuffer(short *buffer);
+
+	void invalidate();
 
 protected:
 	ios_base::openmode mode;

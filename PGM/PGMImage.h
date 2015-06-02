@@ -13,7 +13,7 @@ public:
 	PGMImage(const char* imgName);
 	//Write constructor
 	PGMImage(const char* imgName, unsigned width, unsigned height, unsigned pixelMax);
-	// Copy constructor
+	// Copy constructors
 	PGMImage(PGMImage&& other);
 
 	virtual ~PGMImage();
@@ -32,6 +32,7 @@ public:
 	void setBuffer(byte* buffer);
 
 	void imageToText();
+	void invalidate();
 
 protected:
 	ios_base::openmode mode;
