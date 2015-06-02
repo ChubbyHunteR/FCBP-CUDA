@@ -26,7 +26,7 @@
 #define THREADS 1
 
 /*
- * Limit on how many images may be encoded/decoded at once.
+ * Limit on how many images may be encoded/decoded at once. If images are ~200kB, set to 800 for a 2GB card, or 1600 for a 4GB card.
  */
 #define CUDA_MAX_IMG 800
 
