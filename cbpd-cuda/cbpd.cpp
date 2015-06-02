@@ -37,8 +37,16 @@ int main(int argc, char* argv[]) {
 		outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
 	}
 
-	PGMCBPDCUDA cbpd(inputImagesError, outputImages);
-	cbpd.decode();
+	for(unsigned imageOffset = 0; imageOffset < inputImagesError.size(); imageOffset += CUDA_MAX_IMG){
+		vector<PGMImageError> inputImagesErrorTmp;
+		vector<PGMImage> outputImagesTmp;
+		for(unsigned i = 0; i < CUDA_MAX_IMG && i + imageOffset < inputImagesError.size(); ++i){
+			inputImagesErrorTmp.push_back(inputImagesError[i + imageOffset]);
+			outputImagesTmp.push_back(outputImages[i + imageOffset]);
+		}
+		PGMCBPDCUDA cbpd(inputImagesErrorTmp, outputImagesTmp);
+		cbpd.decode();
+	}
 
 	return 0;
 }

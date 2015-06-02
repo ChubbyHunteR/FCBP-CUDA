@@ -25,4 +25,9 @@
 */
 #define THREADS 1
 
+/*
+ * Limit on how many images may be encoded/decoded at once.
+ */
+#define CUDA_MAX_IMG 1000
+
 #endif /* CONFIG_H_ */

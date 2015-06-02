@@ -56,8 +56,18 @@ int main(int argc, char* argv[]) {
 	predictors.push_back(new PredictorGN);
 	predictors.push_back(new PredictorPL);
 
-	PGMCBPCCUDA cbpc(inputImages, outputImages, errorImages, predictors);
-	cbpc.predict();
+	for(unsigned imageOffset = 0; imageOffset < inputImages.size(); imageOffset += CUDA_MAX_IMG){
+		vector<PGMImage> inputImagesTmp;
+		vector<PGMImage> outputImagesTmp;
+		vector<PGMImageError> errorImagesTmp;
+		for(unsigned i = 0; i < CUDA_MAX_IMG && i + imageOffset < inputImages.size(); ++i){
+			inputImagesTmp.push_back(inputImages[i + imageOffset]);
+			outputImagesTmp.push_back(outputImages[i + imageOffset]);
+			errorImagesTmp.push_back(errorImages[i + imageOffset]);
+		}
+		PGMCBPCCUDA cbpc(inputImagesTmp, outputImagesTmp, errorImagesTmp, predictors);
+		cbpc.predict();
+	}
 
 	return 0;
 }
