@@ -28,6 +28,6 @@
 /*
  * Limit on how many images may be encoded/decoded at once.
  */
-#define CUDA_MAX_IMG 1000
+#define CUDA_MAX_IMG 800
 
 #endif /* CONFIG_H_ */
