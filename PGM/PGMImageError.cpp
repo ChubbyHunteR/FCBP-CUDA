@@ -22,6 +22,8 @@ PGMImageError::PGMImageError(const char* imgName) :
 
 	imgBuffer = new short[width * height];
 	imgFile->read((char*)imgBuffer, width * height * sizeof(short));
+
+	imgFile->close();
 }
 
 PGMImageError::PGMImageError(const char* imgName, unsigned width, unsigned height, unsigned pixelMax) :
@@ -37,6 +39,8 @@ PGMImageError::PGMImageError(const char* imgName, unsigned width, unsigned heigh
             
     *imgFile << width << " " << height << " " << pixelMax << " ";
     
+    imgFile->close();
+
 }
 
 PGMImageError::PGMImageError(PGMImageError&& other) :
@@ -53,6 +57,7 @@ PGMImageError::~PGMImageError() {
 	}
 
     if (mode != ios::in) {
+    	imgFile->open(imgName, mode);
         imgFile->write((char*)imgBuffer, width * height * sizeof(short));
     }
 

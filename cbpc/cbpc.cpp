@@ -26,43 +26,38 @@ int main(int argc, char* argv[]) {
 		fail(usage);
 	}
 
-	for(unsigned fileOffset = 0; fileOffset < argc; fileOffset += FILESET_SIZE){
-		vector<PGMImage> inputImages;
-		vector<PGMImage> outputImages;
-		vector<PGMImageError> errorImages;
-		for(int i = 0; i < FILESET_SIZE && i + fileOffset < argc; ++i){
-			if(i + fileOffset == 0){
-				++i;
-			}
-			string inputName = argv[i + fileOffset];
-			size_t dot = inputName.find_last_of('.');
-			if(dot == inputName.npos){
-				dot = inputName.length();
-			}
-			string outputName = inputName.substr(0, dot) + "_prediction" + inputName.substr(dot);
-			string errorName = inputName.substr(0, dot) + "_error" + inputName.substr(dot);
-
-			inputImages.emplace_back(inputName.c_str());
-			unsigned w = inputImages.back().getWidth();
-			unsigned h = inputImages.back().getHeight();
-			unsigned size = inputImages.back().getSize();
-			unsigned maxPixel = inputImages.back().getPixelMax();
-			outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
-			errorImages.emplace_back(errorName.c_str(), w, h, maxPixel);
+	vector<PGMImage> inputImages;
+	vector<PGMImage> outputImages;
+	vector<PGMImageError> errorImages;
+	for(int i = 1; i < argc; ++i){
+		string inputName = argv[i];
+		size_t dot = inputName.find_last_of('.');
+		if(dot == inputName.npos){
+			dot = inputName.length();
 		}
+		string outputName = inputName.substr(0, dot) + "_prediction" + inputName.substr(dot);
+		string errorName = inputName.substr(0, dot) + "_error" + inputName.substr(dot);
 
-		vector<Predictor*> predictors;
-		predictors.push_back(new PredictorN);
-		predictors.push_back(new PredictorNW);
-		predictors.push_back(new PredictorGW);
-		predictors.push_back(new PredictorW);
-		predictors.push_back(new PredictorNE);
-		predictors.push_back(new PredictorGN);
-		predictors.push_back(new PredictorPL);
-
-		PGMCBPC cbpc(inputImages, outputImages, errorImages, predictors);
-		cbpc.predict();
+		inputImages.emplace_back(inputName.c_str());
+		unsigned w = inputImages.back().getWidth();
+		unsigned h = inputImages.back().getHeight();
+		unsigned size = inputImages.back().getSize();
+		unsigned maxPixel = inputImages.back().getPixelMax();
+		outputImages.emplace_back(outputName.c_str(), w, h, maxPixel);
+		errorImages.emplace_back(errorName.c_str(), w, h, maxPixel);
 	}
+
+	vector<Predictor*> predictors;
+	predictors.push_back(new PredictorN);
+	predictors.push_back(new PredictorNW);
+	predictors.push_back(new PredictorGW);
+	predictors.push_back(new PredictorW);
+	predictors.push_back(new PredictorNE);
+	predictors.push_back(new PredictorGN);
+	predictors.push_back(new PredictorPL);
+
+	PGMCBPC cbpc(inputImages, outputImages, errorImages, predictors);
+	cbpc.predict();
 
 	return 0;
 }

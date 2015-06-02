@@ -23,11 +23,6 @@
 /*
 * THREADS defines the number of threads per block to run on the GPU.
 */
-#define THREADS 8
-
-/*
- * The OS has a limit on how many files may be opened simultaneously. This limit batches all the input files.
- */
-#define FILESET_SIZE 330
+#define THREADS 1
 
 #endif /* CONFIG_H_ */

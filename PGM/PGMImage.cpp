@@ -36,6 +36,8 @@ PGMImage::PGMImage(const char* imgName) :
 
 	imgBuffer = new byte[width * height];
 	imgFile->read((char*)imgBuffer, width * height);
+
+	imgFile->close();
 }
 
 PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, unsigned pixelMax) :
@@ -50,6 +52,8 @@ PGMImage::PGMImage(const char* imgName, unsigned width, unsigned height, unsigne
     imgBuffer = new byte[width * height];
             
     *imgFile << "P5\n" << width << " " << height << "\n" << pixelMax << endl;
+
+    imgFile->close();
 }
 
 PGMImage::PGMImage(PGMImage&& other) :
@@ -67,6 +71,7 @@ PGMImage::~PGMImage() {
 	}
 
     if (mode != ios::in) {
+    	imgFile->open(imgName, mode);
         imgFile->write( ((char*)(imgBuffer)), width * height);
     }
 
