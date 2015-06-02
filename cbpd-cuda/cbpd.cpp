@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 		fail(usage);
 	}
 
-	for(unsigned imageOffset = 0; imageOffset < CUDA_MAX_IMG; imageOffset += CUDA_MAX_IMG){
+	for(unsigned imageOffset = 0; imageOffset < argc; imageOffset += CUDA_MAX_IMG){
 		vector<PGMImageError> inputImagesError;
 		vector<PGMImage> outputImages;
 		for(int i = 0; i < CUDA_MAX_IMG && i + imageOffset < argc; ++i){
